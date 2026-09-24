@@ -1,0 +1,2 @@
+dataset,decision_level,score_aggregation,validation_threshold,validation_precision,validation_recall,validation_f1,validation_fpr,validation_fnr,final_accuracy,final_precision,final_recall,final_f1,final_fpr,final_fnr,final_average_precision,final_tn,final_fp,final_fn,final_tp
+D2,MaterialID,mean_score,0.3860335266358017,0.75,0.9056603773584906,0.8205128205128205,0.1333333333333333,0.0943396226415094,0.8793103448275862,0.7580645161290323,0.8867924528301887,0.8173913043478261,0.1239669421487603,0.1132075471698113,0.7957844907188096,106,15,6,47

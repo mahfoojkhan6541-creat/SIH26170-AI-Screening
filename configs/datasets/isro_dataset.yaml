@@ -1,0 +1,11 @@
+dataset_id: ISRO
+intended_tasks:
+- anomaly
+notes: ''
+received_at: '2026-09-22T15:25:14.624067+00:00'
+sha256: e2d1a69aa9c8b6c98dc0f4652c6cfc967c54d21d15883ac8251d702622304d2a
+source_name: ISRO
+source_path: data/D2_SAMPLE.csv
+source_type: csv
+source_version: sha256:e2d1a69aa9c8
+status: registered

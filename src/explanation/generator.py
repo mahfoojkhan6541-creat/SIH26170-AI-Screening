@@ -56,6 +56,16 @@ class ExplanationGenerator:
                 "Measurements are trusted, but trajectory features indicate watch-level deviation from nominal peer baselines."
             )
 
+        # Append TreeSHAP feature attribution clause if available
+        top_feats = evidence_pack.get("anomaly", {}).get("top_features", [])
+        if top_feats and recommendation in ["REVIEW", "REJECT"]:
+            top_drivers = [
+                f"{f.get('feature')} (SHAP: {f.get('shap_value', 0.0):+.4f}, Z: {f.get('z_score', 0.0):.2f})"
+                for f in top_feats[:3] if f.get("shap_value", 0.0) > 0 or f.get("z_score", 0.0) >= 1.5
+            ]
+            if top_drivers:
+                narrative += f" Primary contributing parameter features: {'; '.join(top_drivers)}."
+
         # 2. Physical-Cause Context Hypotheses (Section 35)
         # Note: Interpretive hypotheses only, never stated as automated physical diagnoses.
         hypotheses = []

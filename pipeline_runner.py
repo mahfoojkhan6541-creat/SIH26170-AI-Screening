@@ -152,23 +152,60 @@ def run_pipeline(
     print(f"    (Includes: level, drift rate, trajectory curvature, and peer-relative z-scores)")
 
     # -------------------------------------------------------------
-    # Step 7: Model Branch 1 — Isolation Forest (Phase 4)
+    # Step 7: Model Branch 1 — Isolation Forest (Dynamic Model Registry)
     # -------------------------------------------------------------
     print("\n[Step 7] Model Branch 1: Isolation Forest Anomaly Scoring...")
-    frozen_d2_path = "models/D2_v2_no_acceleration_frozen_model.pkl"
-    d2_cfg_path = "models/D2_v2_no_acceleration_config.pkl"
+    registry_path = "configs/model_registry.json"
+    dataset_reg = None
+    if os.path.exists(registry_path):
+        try:
+            with open(registry_path, "r", encoding="utf-8") as f:
+                model_registry = json.load(f)
+                dataset_reg = model_registry.get(dataset_id)
+        except Exception:
+            dataset_reg = None
 
-    if dataset_id == "D2" and os.path.exists(frozen_d2_path) and os.path.exists(d2_cfg_path):
+    is_registered_frozen = (
+        dataset_reg is not None
+        and dataset_reg.get("status") == "frozen"
+        and os.path.exists(dataset_reg.get("model_path", ""))
+        and os.path.exists(dataset_reg.get("config_path", ""))
+    )
+
+    if is_registered_frozen:
+        model_path = dataset_reg["model_path"]
+        config_path = dataset_reg["config_path"]
+        expected_feature_count = dataset_reg.get("feature_count")
+
         if_detector = IsolationForestAnomalyDetector.load_frozen(
-            config_path=d2_cfg_path,
-            model_path=frozen_d2_path
+            config_path=config_path,
+            model_path=model_path
         )
-        print(f"  ✓ Loaded frozen validated Isolation Forest ({if_detector.model_version}, {len(if_detector.feature_names)} features, threshold={if_detector.frozen_threshold:.4f})")
-        scores_df = if_detector.score(X_df)
+        print(f"  ✓ Loaded registered frozen model '{dataset_reg.get('dataset_name')}' ({if_detector.model_version}, {len(if_detector.feature_names)} features, threshold={if_detector.frozen_threshold:.4f})")
+
+        id_col = "MaterialID" if "MaterialID" in raw_df.columns else "component_id"
+        raw_sub = raw_df[raw_df[id_col].astype(str).isin([str(c) for c in sample_components])]
+        X_reg = feat_engine.extract_registered_features(raw_sub, if_detector.feature_names)
+        X_reg.index = X_reg.index.astype(str)
+
+        if expected_feature_count is not None and X_reg.shape[1] != expected_feature_count:
+            raise ValueError(
+                f"Feature dimension mismatch for dataset '{dataset_id}': Model expects {expected_feature_count} features, but input produced {X_reg.shape[1]} features."
+            )
+
+        scores_df = if_detector.score(X_reg)
+        scores_df.index = scores_df.index.astype(str)
+        X_df = X_reg
     else:
-        if_detector = IsolationForestAnomalyDetector(model_version=f"{dataset_id.lower()}_if_v1", n_estimators=200, contamination=0.01)
+        print(f"  ℹ Dataset '{dataset_id}' unregistered or pending adaptation. Performing clean unsupervised fit...")
+        if_detector = IsolationForestAnomalyDetector(
+            model_version=f"{dataset_id.lower()}_if_v1",
+            n_estimators=200,
+            contamination=0.01
+        )
         if_detector.fit(X_df)
         scores_df = if_detector.score(X_df, watch_threshold=0.55, review_threshold=0.65)
+
     
     anom_counts = scores_df["anomaly_status"].value_counts().to_dict()
     print(f"  ✓ Calibrated Anomaly Scores Generated (0.0 to 1.0):")
@@ -371,11 +408,25 @@ def main():
         max_components_detailed=200
     )
 
+    # 3. Run Pipeline on Authentic NASA Power Semiconductor Degradation Dataset
+    nasa_canonical_path = "data/canonical/NASA_degradation_canonical.csv"
+    if not os.path.exists(nasa_canonical_path):
+        from src.ingestion.nasa_adapter import extract_and_save_nasa_data
+        extract_and_save_nasa_data()
+
+    nasa_summary = run_pipeline(
+        dataset_id="NASA",
+        raw_file_path=nasa_canonical_path,
+        mapping_version="nasa_mapping",
+        max_components_detailed=10
+    )
+
     print("\n" + "=" * 80)
-    print("   FINAL PIPELINE SUMMARY ACROSS BOTH AUTHENTIC DATASETS")
+    print("   FINAL PIPELINE SUMMARY ACROSS ALL AUTHENTIC DATASETS")
     print("=" * 80)
-    print(f"  Dataset D1: {d1_summary['total_components_screened']} components screened | Dispositions: {d1_summary['decisions']} | GPR: {d1_summary['gpr_enabled']}")
-    print(f"  Dataset D2: {d2_summary['total_components_screened']} components screened | Dispositions: {d2_summary['decisions']} | GPR: {d2_summary['gpr_enabled']}")
+    print(f"  Dataset D1:   {d1_summary['total_components_screened']} components screened | Dispositions: {d1_summary['decisions']} | GPR: {d1_summary['gpr_enabled']}")
+    print(f"  Dataset D2:   {d2_summary['total_components_screened']} components screened | Dispositions: {d2_summary['decisions']} | GPR: {d2_summary['gpr_enabled']}")
+    print(f"  Dataset NASA: {nasa_summary['total_components_screened']} components screened | Dispositions: {nasa_summary['decisions']} | GPR: {nasa_summary['gpr_enabled']}")
     print("=" * 80 + "\n")
 
 

@@ -147,3 +147,105 @@ class FeatureEngineeringEngine:
         X_df = X_df.fillna(0.0)
 
         return X_df, meta_df, eval_df
+
+    def extract_registered_features(
+        self,
+        df: pd.DataFrame,
+        expected_features: List[str]
+    ) -> pd.DataFrame:
+        """
+        Extracts high-integrity validated features (level, drift, rolling std, spikes,
+        stabilization, trajectory change, peer deviations, acceleration if required)
+        strictly matching a pre-trained frozen model's expected feature schema.
+        """
+        df_copy = df.copy()
+        id_col = "MaterialID" if "MaterialID" in df_copy.columns else "component_id"
+        time_col = "duration_ms" if "duration_ms" in df_copy.columns else "elapsed_time"
+        step_col = "StepID" if "StepID" in df_copy.columns else "checkpoint"
+
+        if id_col not in df_copy.columns:
+            raise ValueError(f"Required identifier column '{id_col}' not found in dataframe.")
+
+        df_copy["_source_order"] = np.arange(len(df_copy))
+        sort_cols = [c for c in [id_col, time_col, "_source_order"] if c in df_copy.columns]
+        df_copy = df_copy.sort_values(sort_cols).reset_index(drop=True)
+
+        raw_features = [
+            c for c in df_copy.columns
+            if c.startswith("feature_") and not any(
+                c.endswith(s) for s in [
+                    "_delta", "_slope", "_rolling_std", "_spike",
+                    "_acceleration", "_stabilization", "_trajectory_change",
+                    "_peer_deviation"
+                ]
+            )
+        ]
+
+        feats = {}
+        # 1. Level & Delta
+        for f in raw_features:
+            feats[f] = df_copy[f].values
+            prev = df_copy.groupby(id_col)[f].shift(1).values
+            delta = df_copy[f].values - prev
+            feats[f"{f}_delta"] = delta
+
+        # 2. Slope / Drift
+        dt_safe = np.ones(len(df_copy), dtype=float)
+        if time_col in df_copy.columns:
+            prev_time = df_copy.groupby(id_col)[time_col].shift(1).values
+            dt = df_copy[time_col].values - prev_time
+            dt_safe = np.where(dt > 0, dt, np.nan)
+
+        for f in raw_features:
+            slope = feats[f"{f}_delta"] / dt_safe
+            feats[f"{f}_slope"] = slope
+
+        # 3. Acceleration
+        for f in raw_features:
+            prev_slope = pd.Series(feats[f"{f}_slope"]).groupby(df_copy[id_col]).shift(1).values
+            feats[f"{f}_acceleration"] = (feats[f"{f}_slope"] - prev_slope) / dt_safe
+
+        # 4. Rolling std & spikes
+        for f in raw_features:
+            rolling_std = df_copy.groupby(id_col)[f].transform(lambda x: x.rolling(3, min_periods=1).std()).values
+            feats[f"{f}_rolling_std"] = rolling_std
+            mean_3 = df_copy.groupby(id_col)[f].transform(lambda x: x.rolling(3, min_periods=1).mean()).values
+            std_3 = df_copy.groupby(id_col)[f].transform(lambda x: x.rolling(3, min_periods=1).std()).replace(0.0, 1e-6).values
+            feats[f"{f}_spike"] = np.abs(df_copy[f].values - mean_3) / std_3
+
+        # 5. Stabilization
+        for f in raw_features:
+            first_val = df_copy.groupby(id_col)[f].transform("first").values
+            feats[f"{f}_stabilization"] = np.abs(df_copy[f].values - first_val)
+
+        # 6. Trajectory change
+        for f in raw_features:
+            prev_slope = pd.Series(feats[f"{f}_slope"]).groupby(df_copy[id_col]).shift(1).values
+            feats[f"{f}_trajectory_change"] = np.abs(feats[f"{f}_slope"] - prev_slope)
+
+        # 7. Raw summary
+        if raw_features:
+            raw_matrix = df_copy[raw_features].values
+            feats["measurement_mean"] = np.nanmean(raw_matrix, axis=1)
+            feats["measurement_std"] = np.nanstd(raw_matrix, axis=1)
+
+        # 8. Peer deviations
+        for f in raw_features:
+            if step_col in df_copy.columns:
+                peer_mean = df_copy.groupby(step_col)[f].transform("mean").values
+                peer_std = df_copy.groupby(step_col)[f].transform("std").replace(0.0, 1e-6).values
+                feats[f"{f}_peer_deviation"] = (df_copy[f].values - peer_mean) / peer_std
+            else:
+                feats[f"{f}_peer_deviation"] = np.zeros(len(df_copy))
+
+        feats_df = pd.DataFrame(feats)
+        feats_df[id_col] = df_copy[id_col].values
+
+        # Aggregate to component/material decision level (latest state)
+        latest_feats = feats_df.groupby(id_col).last()
+
+        # Reindex to exact expected features
+        avail = [c for c in expected_features if c in latest_feats.columns]
+        result_df = latest_feats[avail].apply(pd.to_numeric, errors="coerce").fillna(0.0)
+        return result_df
+

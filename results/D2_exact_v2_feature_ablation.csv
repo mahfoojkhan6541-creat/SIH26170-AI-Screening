@@ -1,0 +1,14 @@
+configuration,feature_count,material_groups,average_precision
+without_acceleration,156,173,0.8343712456312276
+all_features,175,173,0.8177216286654541
+without_trajectory,156,173,0.8063999796098456
+without_variability,156,173,0.8049172745332009
+without_stabilization,156,173,0.796892796398632
+level_plus_peer,40,173,0.790295495726544
+level_peer_mean_std,42,173,0.7891187849006128
+without_slope,156,173,0.7787177353881974
+without_spike,156,173,0.7744139990505267
+without_delta,156,173,0.7673994925785105
+level_plus_mean_std,22,173,0.704091959283857
+level_only,20,173,0.5145004383877096
+without_peer_deviation,155,173,0.4029811058211119

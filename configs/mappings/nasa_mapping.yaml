@@ -1,0 +1,74 @@
+mapping_version: "nasa_v1"
+source_format: "wide"
+description: "Schema mapping for NASA PCoE Power Semiconductor degradation dataset"
+
+identity_fields:
+  - source_field: "component_id"
+    internal_concept: "component_id"
+    data_type: "string"
+    required: true
+    nullable: false
+
+temporal_fields:
+  - source_field: "checkpoint"
+    internal_concept: "checkpoint"
+    data_type: "float"
+    required: true
+    nullable: false
+  - source_field: "elapsed_time"
+    internal_concept: "elapsed_time"
+    data_type: "float"
+    required: true
+    nullable: false
+
+metadata_fields:
+  - source_field: "part_type"
+    internal_concept: "part_type"
+    data_type: "string"
+    required: false
+    nullable: true
+    is_model_feature: false
+  - source_field: "part_number"
+    internal_concept: "part_number"
+    data_type: "string"
+    required: false
+    nullable: true
+    is_model_feature: false
+  - source_field: "lot_id"
+    internal_concept: "lot_id"
+    data_type: "string"
+    required: false
+    nullable: true
+    is_model_feature: false
+
+parameter_fields:
+  - source_field: "param_01"
+    parameter_key: "param_01"
+    canonical_unit: "A"
+    data_type: "float"
+    description: "Collector-Emitter Current (ICE)"
+    required: true
+  - source_field: "param_02"
+    parameter_key: "param_02"
+    canonical_unit: "degC"
+    data_type: "float"
+    description: "Package Temperature"
+    required: true
+  - source_field: "param_03"
+    parameter_key: "param_03"
+    canonical_unit: "degC"
+    data_type: "float"
+    description: "Heat Sink Temperature"
+    required: true
+  - source_field: "param_04"
+    parameter_key: "param_04"
+    canonical_unit: "V"
+    data_type: "float"
+    description: "Supply Voltage"
+    required: true
+  - source_field: "param_05"
+    parameter_key: "param_05"
+    canonical_unit: "V"
+    data_type: "float"
+    description: "Node 1 Voltage"
+    required: true

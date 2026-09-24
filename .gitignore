@@ -1,24 +1,64 @@
-# Python
+# Python Environment & Cache
 __pycache__/
-*.pyc
-.venv/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
 venv/
+ENV/
+.venv/
 
-# Large generated datasets
+# IDE & Operating System
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs, Backups & Scratch Chunks
+*.log
+*.tmp
+*.bak
+scratch_chunk_*.txt
+
+# Frontend Dependencies & Build Output
+extracted_reference/node_modules/
+extracted_reference/dist/
+extracted_reference/.vite/
+extracted_reference/.turbo/
+.opencode/node_modules/
+
+# Large Datasets (>100MB exceeds GitHub hard limit)
+data/D1.csv
+
+# Intermediate Heavy Cache Files
+models/*_candidates.pkl
 features/*.csv
 features/*.npy
 
-# Model files
-models/*.pkl
-models/*.joblib
+# Heavy intermediate results splits (preserve reports, summaries & plots)
+results/*_train.csv
+results/*_train_*.csv
+results/*_validation.csv
+results/*_validation_*.csv
+results/*_final_test.csv
+results/*_final_test_*.csv
+results/*_material_level_validation.csv
 
-# Generated outputs
-outputs/
-results/
-
-# Temporary files
-*.tmp
-*.log
-data/D1.csv
-
-data/D1.csv
+# Explicitly Track Frozen Model Artifacts & Preprocessing Bundles
+!models/D2_v2_no_acceleration_frozen_model.pkl
+!models/D2_v2_no_acceleration_config.pkl
+!models/D2_v2_no_acceleration_preprocessing.pkl
+!models/NASA_GPR_frozen_model.pkl
+!models/D1_final_frozen_model.pkl
+!models/D1_final_frozen_config.pkl
+!models/ISRO_frozen_model.pkl
+!models/ISRO_frozen_config.pkl

@@ -53,6 +53,7 @@ class IsolationForestAnomalyDetector:
         self.frozen_threshold: Optional[float] = None
         self.is_frozen: bool = False
         self.config_metadata: Dict[str, Any] = {}
+        self._shap_explainer: Any = None
 
     @classmethod
     def load_frozen(
@@ -150,8 +151,18 @@ class IsolationForestAnomalyDetector:
                 num_cols = [c for c in num_cols if "_acceleration" not in c]
             return X[num_cols].fillna(0.0)
 
+        if self.is_frozen:
+            missing = set(self.feature_names) - set(X.columns)
+            if missing:
+                raise ValueError(
+                    f"Feature dimension mismatch for frozen model '{self.model_version}': "
+                    f"Missing {len(missing)} required features out of {len(self.feature_names)}. "
+                    f"Sample missing: {list(missing)[:5]}"
+                )
+
         X_aligned = X.reindex(columns=self.feature_names).apply(pd.to_numeric, errors="coerce").fillna(0.0)
         return X_aligned
+
 
     def score(
         self,
@@ -232,16 +243,29 @@ class IsolationForestAnomalyDetector:
 
         return results_df
 
+    def get_shap_explainer(self):
+        """Lazily initialize and cache TreeExplainer on the underlying Isolation Forest model."""
+        if getattr(self, "_shap_explainer", None) is None:
+            if self.model is not None:
+                try:
+                    import shap
+                    self._shap_explainer = shap.TreeExplainer(self.model)
+                except Exception:
+                    self._shap_explainer = None
+        return self._shap_explainer
+
     def explain_component(
         self,
         X_row: Union[pd.Series, pd.DataFrame, np.ndarray],
-        top_k: int = 5
+        top_k: int = 5,
+        use_shap: bool = True
     ) -> List[Dict[str, Any]]:
         """
         Computes feature attribution for anomaly explainability (Section 33).
-        Ranks top k features deviating most significantly from baseline reference population.
+        Combines exact Shapley additive feature attributions (TreeSHAP) with
+        peer-relative Z-score deviations against the reference population.
         """
-        if self.baseline_mean is None or self.baseline_std is None or not self.feature_names:
+        if not self.feature_names:
             return []
 
         if isinstance(X_row, pd.DataFrame):
@@ -251,22 +275,62 @@ class IsolationForestAnomalyDetector:
         else:
             row_series = pd.Series(X_row, index=self.feature_names[:len(X_row)])
 
-        z_scores = ((row_series - self.baseline_mean) / self.baseline_std).abs()
-        top_features = z_scores.sort_values(ascending=False).head(top_k)
+        # Compute peer Z-scores if baseline stats exist
+        if self.baseline_mean is not None and self.baseline_std is not None:
+            z_scores = ((row_series - self.baseline_mean) / self.baseline_std).abs()
+        else:
+            z_scores = pd.Series(0.0, index=self.feature_names)
+
+        # Attempt TreeSHAP calculation
+        shap_series = None
+        if use_shap and self.model is not None:
+            explainer = self.get_shap_explainer()
+            if explainer is not None:
+                try:
+                    row_vals = row_series.values.reshape(1, -1)
+                    raw_shap = explainer.shap_values(row_vals)
+                    if isinstance(raw_shap, list) and len(raw_shap) > 0:
+                        raw_shap = raw_shap[0]
+                    shap_series = pd.Series(raw_shap.flatten(), index=self.feature_names)
+                except Exception:
+                    shap_series = None
+
+        # Prioritize ranking by positive SHAP attribution (pushing toward anomaly),
+        # or fallback to peer Z-score deviation if SHAP is unavailable
+        if shap_series is not None:
+            ranked_features = shap_series.sort_values(ascending=False).head(top_k)
+        else:
+            ranked_features = z_scores.sort_values(ascending=False).head(top_k)
 
         attributions = []
-        for feat, z_val in top_features.items():
+        for feat in ranked_features.index:
             actual_val = float(row_series[feat])
-            mean_val = float(self.baseline_mean[feat])
+            mean_val = float(self.baseline_mean[feat]) if self.baseline_mean is not None else 0.0
+            z_val = float(z_scores.get(feat, 0.0))
             direction = "elevated" if actual_val >= mean_val else "depressed"
-            attributions.append({
+
+            attr_entry: Dict[str, Any] = {
                 "feature": str(feat),
-                "z_score": round(float(z_val), 3),
                 "actual_value": round(actual_val, 4),
                 "baseline_mean": round(mean_val, 4),
+                "z_score": round(z_val, 3),
                 "direction": direction,
-                "impact": "High outlier deviation" if z_val >= 3.0 else "Moderate drift deviation"
-            })
+            }
+
+            if shap_series is not None:
+                s_val = float(shap_series[feat])
+                attr_entry["shap_value"] = round(s_val, 5)
+                attr_entry["method"] = "TreeSHAP"
+                attr_entry["impact"] = (
+                    f"Primary anomaly driver (SHAP: {s_val:+.4f}, Z: {z_val:.2f})"
+                    if s_val > 0 else f"Baseline stabilizer (SHAP: {s_val:+.4f})"
+                )
+            else:
+                attr_entry["shap_value"] = 0.0
+                attr_entry["method"] = "Peer_ZScore"
+                attr_entry["impact"] = "High outlier deviation" if z_val >= 3.0 else "Moderate drift deviation"
+
+            attributions.append(attr_entry)
 
         return attributions
 

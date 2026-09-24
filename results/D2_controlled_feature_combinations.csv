@@ -1,0 +1,11 @@
+experiment,feature_count,average_precision
+level_only,20,0.5185884146312787
+level_delta,39,0.49127187968362007
+level_spike,39,0.482325426581347
+level_stabilization,39,0.4752818454997164
+level_slope,39,0.4741319033107705
+level_variability,39,0.44041277273127144
+level_trajectory_variability,58,0.4321477640550333
+level_trajectory_stabilization,58,0.4151292415838813
+level_trajectory,39,0.41270081405441217
+level_trajectory_stabilization_variability,77,0.37446957093082545

@@ -1,0 +1,16 @@
+experiment,feature_count,average_precision
+level_delta_spike_stabilization_variability,100,0.43705481975122074
+level_delta_spike_stabilization,80,0.42928277379291546
+level_spike_stabilization,60,0.4265328347208292
+level_delta,40,0.42622950952990163
+level_only,20,0.42457157272207674
+level_slope,40,0.42357705113940475
+level_stabilization,40,0.4234504850154991
+level_delta_slope,60,0.42148139603862156
+level_spike,40,0.4203560280795585
+level_variability,40,0.416408384112377
+level_delta_spike_variability,80,0.416192060391237
+level_delta_spike,60,0.40865701419826894
+level_delta_stabilization,60,0.408418623906376
+level_delta_trajectory,60,0.36364354945570143
+level_trajectory,40,0.3573092851010542

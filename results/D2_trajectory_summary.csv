@@ -1,0 +1,7 @@
+metric,value
+total_rows,126794
+unique_materials,1156
+measurement_features,20
+unique_stepids,2
+duplicate_timestamp_rows,0
+negative_source_time_differences,12

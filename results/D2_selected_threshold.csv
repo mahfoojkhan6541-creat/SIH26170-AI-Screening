@@ -1,0 +1,2 @@
+dataset_used_for_selection,split_used_for_selection,method,feature_representation,score_column,max_validation_fpr,selected_threshold,validation_precision,validation_recall,validation_f1,validation_fpr,validation_fnr,validation_tp,validation_tn,validation_fp,validation_fn
+D2,validation,Isolation Forest,enhanced,score_0.01,0.35,0.3741079535858967,0.4249529780564263,0.5816028831302557,0.4910882480799884,0.3484272906853062,0.4183971168697443,3389,8576,4586,2438

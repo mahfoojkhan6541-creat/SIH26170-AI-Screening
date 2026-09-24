@@ -1,0 +1,25 @@
+===========================================================================
+   SIH26170 — ISRO GRAND FINALE FINAL SCREENING REPORT
+===========================================================================
+
+Run ID:                  run_isro_14a525ff
+Timestamp:               2026-09-22T15:25:15.474227+00:00
+Source Input:            data/D2_SAMPLE.csv
+Total Rows Ingested:     500
+Total Components Screened: 6
+Frozen Model Threshold:  0.393578
+Quarantined Records:     0
+GPR Forecasting Active:  False
+
+OPERATIONAL DISPOSITIONS BREAKDOWN:
+--------------------------------------------------
+  - PASS      :     0 components (0.00%)
+  - REJECT    :     6 components (100.00%)
+  - RETEST    :     0 components (0.00%)
+  - REVIEW    :     0 components (0.00%)
+
+TRACEABILITY & AUDIT:
+--------------------------------------------------
+  - Provenance DB: data/audit_traceability.db
+  - Model Registry: configs/model_registry.json
+===========================================================================

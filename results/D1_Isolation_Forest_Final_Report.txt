@@ -1,0 +1,55 @@
+======================================================================
+SIH26170 - ISOLATION FOREST FINAL REPORT (DATASET D1)
+======================================================================
+
+1. DATASET
+----------------------------------------------------------------------
+Dataset: D1
+Domain: Burn-in screening with 8 progressive checkpoints (-2 to 7)
+Sampling: 5,104 unique component groups
+
+2. MODEL
+----------------------------------------------------------------------
+Method: Isolation Forest
+Feature representation: Enhanced multi-checkpoint trajectory features
+Number of estimators: 200
+Random state: 42
+Candidate contamination: 0.01
+Score definition: -IsolationForest.score_samples(X)
+
+3. FEATURES
+----------------------------------------------------------------------
+Original feature count: 137
+Selected model feature count: 137
+
+4. DECISION CONFIGURATION
+----------------------------------------------------------------------
+Decision level: MaterialID
+Score aggregation: mean_score
+Validation threshold (P99): 0.415636
+Threshold selection split: validation
+Threshold frozen: True
+
+5. VALIDATION SCREENING METRICS
+----------------------------------------------------------------------
+Validation MaterialIDs: 766
+Validation Mean Anomaly Score: 0.410243
+Validation Alert Rate: 1.04%
+
+6. FINAL TEST PERFORMANCE & SCREENING DISPOSITION
+----------------------------------------------------------------------
+Total MaterialIDs Screened: 766
+Nominal Approved (NORMAL): 752 (98.2%)
+Outlier Screened (ABNORMAL): 14 (1.83%)
+Alert Rate: 1.83%
+
+7. LEAKAGE CHECK
+----------------------------------------------------------------------
+Final test used for threshold selection: False
+Threshold source: validation
+Final-test labels used for model training: No
+Final-test labels used for threshold selection: No
+
+======================================================================
+FINAL REPORT COMPLETE
+======================================================================

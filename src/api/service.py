@@ -49,6 +49,9 @@ ENCODERS_BY_TYPE[np.float32] = float
 ENCODERS_BY_TYPE[np.bool_] = bool
 ENCODERS_BY_TYPE[np.ndarray] = lambda arr: arr.tolist()
 
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
+
 # Enable CORS for dashboard access
 app.add_middleware(
     CORSMiddleware,
@@ -57,6 +60,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount Clean White Aerospace Dashboard
+if os.path.exists("dashboard"):
+    app.mount("/dashboard", StaticFiles(directory="dashboard", html=True), name="dashboard")
+
+@app.get("/", include_in_schema=False)
+def root_redirect():
+    return RedirectResponse(url="/dashboard/")
 
 # Global services & storage
 registry = DatasetRegistry()
@@ -257,19 +268,68 @@ def run_analysis(req: AnalyzeRequest):
     # Batch features at the latest checkpoint
     X_df, meta_df, eval_df = feature_engine.extract_feature_matrix_batch(sub_df, param_keys, last_checkpoint)
 
-    # 5. Isolation Forest Anomaly Detection
-    frozen_d2 = "models/D2_v2_no_acceleration_frozen_model.pkl"
-    d2_cfg = "models/D2_v2_no_acceleration_config.pkl"
-    if req.dataset_id == "D2" and os.path.exists(frozen_d2) and os.path.exists(d2_cfg):
-        if_model = IsolationForestAnomalyDetector.load_frozen(config_path=d2_cfg, model_path=frozen_d2)
-        score_df = if_model.score(X_df)
+    # 5. Isolation Forest Anomaly Detection (Dynamic Model Registry)
+    registry_path = "configs/model_registry.json"
+    dataset_reg = None
+    if os.path.exists(registry_path):
+        try:
+            with open(registry_path, "r", encoding="utf-8") as f:
+                model_registry = json.load(f)
+                dataset_reg = model_registry.get(req.dataset_id)
+        except Exception:
+            dataset_reg = None
+
+    is_registered_frozen = (
+        dataset_reg is not None
+        and dataset_reg.get("status") == "frozen"
+        and os.path.exists(dataset_reg.get("model_path", ""))
+        and os.path.exists(dataset_reg.get("config_path", ""))
+    )
+
+    if is_registered_frozen:
+        model_path = dataset_reg["model_path"]
+        config_path = dataset_reg["config_path"]
+        expected_feature_count = dataset_reg.get("feature_count")
+
+        if_model = IsolationForestAnomalyDetector.load_frozen(
+            config_path=config_path,
+            model_path=model_path
+        )
+
+        id_col = "MaterialID" if "MaterialID" in raw_df.columns else "component_id"
+        raw_sub = raw_df[raw_df[id_col].astype(str).isin([str(c) for c in target_components])]
+        X_reg = feature_engine.extract_registered_features(raw_sub, if_model.feature_names)
+        X_reg.index = X_reg.index.astype(str)
+
+        # Dimension validation check (raise HTTPException(400) if dimensions mismatch)
+        if expected_feature_count is not None and X_reg.shape[1] != expected_feature_count:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Feature dimension mismatch for dataset '{req.dataset_id}': Model expects {expected_feature_count} features, but input data produced {X_reg.shape[1]} features."
+            )
+
+        try:
+            score_df = if_model.score(X_reg)
+            score_df.index = score_df.index.astype(str)
+            X_df = X_reg
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
     else:
-        if_model = IsolationForestAnomalyDetector(model_version=f"{req.dataset_id.lower()}_if_v1", n_estimators=200, contamination=0.01)
+        # Fallback to clean unsupervised fitting ONLY if unregistered
+        if_model = IsolationForestAnomalyDetector(
+            model_version=f"{req.dataset_id.lower()}_if_v1",
+            n_estimators=200,
+            contamination=0.01
+        )
         if len(X_df) > 5:
             if_model.fit(X_df)
             score_df = if_model.score(X_df)
         else:
-            score_df = pd.DataFrame({"anomaly_score": [0.0]*len(X_df), "anomaly_status": ["normal"]*len(X_df)}, index=X_df.index)
+            score_df = pd.DataFrame(
+                {"anomaly_score": [0.0] * len(X_df), "anomaly_status": ["normal"] * len(X_df)},
+                index=X_df.index
+            )
+
 
     # 6. GPR Forecaster
     gpr_forecaster = GPRTrajectoryForecaster(model_version="gpr_v1")
@@ -479,3 +539,35 @@ def record_qa_action(req: QAActionRequest):
         "reviewer_id": req.reviewer_id,
         "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
     }
+
+
+@app.get("/api/workspace")
+def get_screening_workspace():
+    """Returns the full screening workspace populated with authentic multi-dataset pipeline results."""
+    workspace_file = "data/real_workspace_data.json"
+    if not os.path.exists(workspace_file):
+        from scripts.export_all_real_data import export_workspace_and_dashboard_data
+        export_workspace_and_dashboard_data()
+
+    if os.path.exists(workspace_file):
+        with open(workspace_file, "r", encoding="utf-8") as f:
+            return json.load(f)
+    raise HTTPException(status_code=404, detail="Workspace data not found.")
+
+
+@app.get("/api/models/registry")
+def get_models_registry():
+    """Returns the model registry metadata."""
+    registry_file = "configs/model_registry.json"
+    if os.path.exists(registry_file):
+        with open(registry_file, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+
+@app.get("/api/trpc/screening.demoWorkspace")
+def trpc_demo_workspace_fallback():
+    """Fallback handler for any client calling legacy tRPC route."""
+    ws = get_screening_workspace()
+    return {"result": {"data": {"json": ws}}}
+

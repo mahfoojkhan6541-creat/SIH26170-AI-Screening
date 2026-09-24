@@ -1,0 +1,71 @@
+{
+  "D2": {
+    "dataset_name": "D2 (Pre/Post Burn-In Screening)",
+    "model_path": "models/D2_v2_no_acceleration_frozen_model.pkl",
+    "config_path": "models/D2_v2_no_acceleration_config.pkl",
+    "preprocessor_path": "models/D2_v2_no_acceleration_preprocessing.pkl",
+    "feature_count": 156,
+    "feature_family": "v2_no_acceleration",
+    "validation_threshold": 0.393578,
+    "watch_threshold": 0.35,
+    "decision_level": "MaterialID",
+    "score_aggregation": "mean_score",
+    "status": "frozen",
+    "metrics": {
+      "accuracy": 0.8908,
+      "recall": 0.9623,
+      "precision": 0.75,
+      "f1": 0.843
+    }
+  },
+  "D1": {
+    "dataset_name": "D1 (8-Checkpoint Progressive Degradation)",
+    "model_path": "models/D1_final_frozen_model.pkl",
+    "config_path": "models/D1_final_frozen_config.pkl",
+    "preprocessor_path": "models/D1_enhanced_preprocessing.pkl",
+    "feature_count": 137,
+    "feature_family": "v1_no_acceleration",
+    "validation_threshold": 0.415636,
+    "watch_threshold": 0.38,
+    "decision_level": "MaterialID",
+    "score_aggregation": "mean_score",
+    "status": "frozen",
+    "metrics": {
+      "alert_rate": 0.0183,
+      "nominal_rate": 0.9817
+    }
+  },
+  "ISRO": {
+    "dataset_name": "ISRO Grand Finale Target Dataset",
+    "model_path": "models/ISRO_frozen_model.pkl",
+    "config_path": "models/ISRO_frozen_config.pkl",
+    "preprocessor_path": "models/ISRO_preprocessing.pkl",
+    "feature_count": 18,
+    "validation_threshold": 0.49748157891612454,
+    "watch_threshold": 0.45748157891612456,
+    "decision_level": "MaterialID",
+    "score_aggregation": "mean_score",
+    "status": "frozen",
+    "metrics": {
+      "adapted_at": "2026-09-22T15:24:49.822524+00:00"
+    }
+  },
+  "NASA_GPR": {
+    "dataset_name": "NASA PCoE Power Semiconductor Thermal Aging",
+    "model_type": "GaussianProcessRegressor",
+    "model_path": "models/NASA_GPR_frozen_model.pkl",
+    "param_target": "param_01",
+    "early_history_hours": 24.0,
+    "forecast_horizon_hours": 168.0,
+    "status": "frozen",
+    "metrics": {
+      "held_out_mae": 0.09787,
+      "mean_error_pct": 51.62,
+      "interval_coverage_2sigma": 1.0,
+      "test_devices": [
+        "Device3b",
+        "Device4b"
+      ]
+    }
+  }
+}

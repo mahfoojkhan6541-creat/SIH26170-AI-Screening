@@ -1,0 +1,14 @@
+experiment,feature_count,material_level_AP
+level_peer_mean_std,42,0.47014577953108694
+level_plus_peer,40,0.4690418844143351
+level_plus_mean_std,22,0.4630278105150356
+all_features,175,0.4475750721299282
+without_trajectory,156,0.446060535136453
+without_spike,156,0.4372076432698033
+without_variability,156,0.4369390507293196
+without_acceleration,156,0.4361664322467782
+without_stabilization,156,0.43534495831540476
+without_slope,156,0.42673568794228817
+level_only,20,0.42457157272207674
+without_delta,156,0.4244441663911267
+without_peer_deviation,155,0.35519578175104155
