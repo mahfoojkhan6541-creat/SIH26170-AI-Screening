@@ -455,6 +455,14 @@
           </div>
 
           <div class="header-action-group">
+            <button class="btn-hdr-action btn-hdr-sim" id="btnLiveSim" onclick="toggleLiveSimulation()" title="Start real-time burn-in chamber telemetry simulation">
+              <span class="sim-pulse-dot" id="simPulseDot"></span>
+              <span id="btnLiveSimText">Live Simulation</span>
+            </button>
+            <button class="btn-hdr-action btn-hdr-reset" id="btnLiveReset" onclick="resetLiveSimulation()" style="display:none;" title="Reset Simulation to Initial State">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              <span>Reset</span>
+            </button>
             <button class="btn-hdr-action btn-hdr-upload" onclick="openUploadModal()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               <span>Upload Data</span>
@@ -811,23 +819,47 @@
           }
         }
       } else if (currentDataset === 'D2') {
-        document.getElementById('stripAccuracy').innerText = '89.08%';
-        document.getElementById('stripRecall').innerText = '96.23%';
-        document.getElementById('stripSpecificity').innerText = '85.95%';
-        document.getElementById('stripPrecision').innerText = '75.00%';
-        document.getElementById('stripF1').innerText = '0.843';
-        document.getElementById('stripFnr').innerText = '3.77%';
+        const simActive = window.ISRO_SIMULATION && window.ISRO_SIMULATION.streamedItems && window.ISRO_SIMULATION.streamedItems.length > 0;
+        let tn = 104, fp = 17, fn = 2, tp = 51;
+        if (simActive) {
+          const simItems = window.ISRO_SIMULATION.streamedItems;
+          const simPass = simItems.filter(d => d.disposition === 'PASS').length;
+          const simReview = simItems.filter(d => d.disposition === 'REVIEW').length;
+          const simReject = simItems.filter(d => d.disposition === 'REJECT').length;
+          tn += simPass;
+          fp += simReview;
+          tp += simReject;
+        }
 
-        document.getElementById('cmSubtitle').innerText = 'Frozen Test Set Performance \u2022 174 Out-of-Sample Materials';
-        document.getElementById('cmModelTag').innerText = 'Model: Frozen Isolation Forest v2';
-        document.getElementById('cmTN').innerText = String(cm.TN);
-        document.getElementById('cmFP').innerText = String(cm.FP);
-        document.getElementById('cmFN').innerText = String(cm.FN);
-        document.getElementById('cmTP').innerText = String(cm.TP);
-        document.getElementById('cmSensitivity').innerText = '96.23%';
-        document.getElementById('cmSpecificity').innerText = '85.95%';
-        document.getElementById('cmPrecision').innerText = '75.00%';
-        document.getElementById('cmF1').innerText = '0.843';
+        const totalMat = tn + fp + fn + tp;
+        const sens = ((tp / Math.max(1, tp + fn)) * 100).toFixed(2) + '%';
+        const spec = ((tn / Math.max(1, tn + fp)) * 100).toFixed(2) + '%';
+        const prec = ((tp / Math.max(1, tp + fp)) * 100).toFixed(2) + '%';
+        const acc = (((tn + tp) / Math.max(1, totalMat)) * 100).toFixed(2) + '%';
+        const fnr = ((fn / Math.max(1, tp + fn)) * 100).toFixed(2) + '%';
+        const rec = tp / Math.max(1, tp + fn);
+        const pr = tp / Math.max(1, tp + fp);
+        const f1Score = (rec + pr > 0) ? (2 * rec * pr / (rec + pr)).toFixed(3) : '0.843';
+
+        document.getElementById('stripAccuracy').innerText = acc;
+        document.getElementById('stripRecall').innerText = sens;
+        document.getElementById('stripSpecificity').innerText = spec;
+        document.getElementById('stripPrecision').innerText = prec;
+        document.getElementById('stripF1').innerText = f1Score;
+        document.getElementById('stripFnr').innerText = fnr;
+
+        document.getElementById('cmSubtitle').innerText = simActive 
+          ? `Live Stream Matrix \u2022 ${totalMat} Components Evaluated`
+          : 'Frozen Test Set Performance \u2022 174 Out-of-Sample Materials';
+        document.getElementById('cmModelTag').innerText = simActive ? 'Model: Active Streaming Forest' : 'Model: Frozen Isolation Forest v2';
+        document.getElementById('cmTN').innerText = String(tn);
+        document.getElementById('cmFP').innerText = String(fp);
+        document.getElementById('cmFN').innerText = String(fn);
+        document.getElementById('cmTP').innerText = String(tp);
+        document.getElementById('cmSensitivity').innerText = sens;
+        document.getElementById('cmSpecificity').innerText = spec;
+        document.getElementById('cmPrecision').innerText = prec;
+        document.getElementById('cmF1').innerText = f1Score;
       } else {
         const tn = data.filter(d => d.disposition === 'PASS').length;
         const fp = data.filter(d => d.disposition === 'REVIEW').length;
@@ -965,6 +997,9 @@
       renderHistogramSvg();
       showToast(`Threshold reset to frozen validation baseline (\u03C4 = ${simulatedThreshold.toFixed(6)}).`);
     }
+
+    // Global hook for live simulation updates
+    window.updateDiagnosticsForSim = renderDiagnostics;
 
     // Window Load
     window.addEventListener('DOMContentLoaded', () => {

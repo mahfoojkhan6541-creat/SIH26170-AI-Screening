@@ -554,6 +554,67 @@ a {
   color: #0F172A;
 }
 
+/* Live Burn-In Chamber Simulation Mode */
+.btn-hdr-sim {
+  background: #F0FDF4;
+  color: #15803D;
+  border: 1px solid #BBF7D0;
+}
+
+.btn-hdr-sim:hover {
+  background: #DCFCE7;
+  border-color: #86EFAC;
+  color: #14532D;
+}
+
+.btn-hdr-sim.active {
+  background: #FEF2F2;
+  color: #B91C1C;
+  border-color: #FECDD3;
+}
+
+.btn-hdr-sim.active:hover {
+  background: #FEE2E2;
+  border-color: #FCA5A5;
+}
+
+.sim-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #16A34A;
+  display: inline-block;
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+}
+
+.btn-hdr-sim.active .sim-pulse-dot {
+  background: #DC2626;
+  animation: pulse-ring 1.4s infinite;
+}
+
+.btn-hdr-reset {
+  background: #FFFFFF;
+  color: #475569;
+  border: 1px solid #CBD5E1;
+}
+
+.btn-hdr-reset:hover {
+  background: #F8FAFC;
+  border-color: #94A3B8;
+  color: #0F172A;
+}
+
+@keyframes highlight-row {
+  0% { background-color: #CCFBF1; }
+  50% { background-color: #E6FFFA; }
+  100% { background-color: transparent; }
+}
+
+.sim-new-row {
+  animation: highlight-row 2.2s ease-out;
+}
+
 /* Fallback legacy button classes */
 .btn-action-light {
   font-family: var(--font-sans);

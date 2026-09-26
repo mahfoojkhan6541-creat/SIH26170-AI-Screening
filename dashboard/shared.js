@@ -30,13 +30,23 @@ function setCustomUploadedDataset(data) {
 }
 
 function getDatasetComponents(key) {
+  let base = [];
   if (key === 'CUSTOM') {
     const custom = getCustomUploadedDataset();
-    return custom ? (custom.components || []) : [];
+    base = custom ? (custom.components || []) : [];
+  } else if (key === 'D1') {
+    base = window.REAL_D1_COMPONENTS || [];
+  } else if (key === 'ISRO') {
+    base = window.REAL_ISRO_COMPONENTS || [];
+  } else {
+    base = window.REAL_D2_COMPONENTS || [];
   }
-  if (key === 'D1') return window.REAL_D1_COMPONENTS || [];
-  if (key === 'ISRO') return window.REAL_ISRO_COMPONENTS || [];
-  return window.REAL_D2_COMPONENTS || [];
+
+  // Prepend live simulated components if active
+  if (window.ISRO_SIMULATION && window.ISRO_SIMULATION.streamedItems && window.ISRO_SIMULATION.streamedItems.length > 0) {
+    return [...window.ISRO_SIMULATION.streamedItems, ...base];
+  }
+  return base;
 }
 
 // 2. HEADER RUN STATUS & SWITCHER SYNC
@@ -1362,4 +1372,281 @@ window.addEventListener('resize', () => {
     }
   }, 150);
 });
+
+// =============================================================
+// 7. LIVE BURN-IN CHAMBER TELEMETRY SIMULATION ENGINE
+// =============================================================
+window.ISRO_SIMULATION = {
+  active: false,
+  timer: null,
+  intervalMs: 1400,
+  streamedItems: [],
+  tickCount: 0
+};
+
+const SIM_PARAM_POOL = [
+  { param: "param_07 (LeakageCurrent)", desc: "Sub-threshold gate dielectric leakage" },
+  { param: "param_15 (ThresholdDrift)", desc: "Gate oxide threshold voltage shift" },
+  { param: "param_04 (DrainConductance)", desc: "Channel degradation under high drain field" },
+  { param: "param_12 (ThermalFlux)", desc: "Substrate heat dissipation variance" },
+  { param: "param_01 (CoreCurrent)", desc: "Core active conduction channel drift" },
+  { param: "param_11 (DynamicRon)", desc: "Dynamic on-resistance switching degradation" }
+];
+
+function generateSimulatedComponent(seq) {
+  const baseNum = 175 + seq;
+  const id = `SIM-${String(baseNum).padStart(3, '0')}`;
+  const lotNum = String((seq % 12) + 1).padStart(2, '0');
+  const lot = `LOT-D2-${lotNum}`;
+  const paramObj = SIM_PARAM_POOL[seq % SIM_PARAM_POOL.length];
+
+  // Distribution: ~70% PASS, ~18% REVIEW, ~12% REJECT
+  // Every 7th tick produces an intentional critical defect for demo excitement!
+  const isReject = (seq % 7 === 4);
+  const isReview = !isReject && (seq % 4 === 2);
+  const disposition = isReject ? 'REJECT' : (isReview ? 'REVIEW' : 'PASS');
+
+  let rawScore, calibratedScore, peerZ, drift;
+  if (isReject) {
+    rawScore = 0.81 + (Math.random() * 0.16);
+    calibratedScore = Math.min(0.99, rawScore + 0.05);
+    peerZ = +(3.2 + Math.random() * 1.5).toFixed(1);
+    drift = +(1.1 + Math.random() * 0.8).toFixed(2);
+  } else if (isReview) {
+    rawScore = 0.52 + (Math.random() * 0.14);
+    calibratedScore = Math.min(0.70, rawScore + 0.02);
+    peerZ = +(2.1 + Math.random() * 0.7).toFixed(1);
+    drift = +(0.35 + Math.random() * 0.25).toFixed(2);
+  } else {
+    rawScore = 0.12 + (Math.random() * 0.22);
+    calibratedScore = +(rawScore * 0.9).toFixed(2);
+    peerZ = +(0.4 + Math.random() * 1.1).toFixed(1);
+    drift = +(0.08 + Math.random() * 0.14).toFixed(2);
+  }
+
+  // Trajectory over 0h -> 168h
+  const traj = [0.10];
+  let cur = 0.10;
+  for (let s = 1; s < 7; s++) {
+    const delta = isReject ? (0.15 + Math.random() * 0.15) : (isReview ? (0.05 + Math.random() * 0.06) : (0.02 + Math.random() * 0.03));
+    cur += delta;
+    traj.push(+cur.toFixed(2));
+  }
+
+  return {
+    id: id,
+    lot: lot,
+    device_type: "DISCRETE-HEMT",
+    parameter: paramObj.param,
+    unit: "arb_norm",
+    checkpoint: "CP-Post (168h)",
+    disposition: disposition,
+    rule: isReject ? "RULE_CRITICAL_ANOMALY" : (isReview ? "RULE_ELEVATED_WATCH_LIST" : "RULE_PASS_NOMINAL"),
+    reason: isReject
+      ? `MaterialID ${id} exhibited elevated drift (+${peerZ}σ) and excessive isolation score (${rawScore.toFixed(4)}) beyond safety envelope. Data quality passed 12/12 gates. Conservative disposition: REJECT.`
+      : (isReview
+          ? `MaterialID ${id} requires QA Engineering REVIEW because anomaly score (${rawScore.toFixed(4)}) is elevated above watch threshold (0.350). Peer deviation is +${peerZ}σ. Data quality passed 12/12 gates.`
+          : `MaterialID ${id} demonstrated clean monotonic thermal stability with nominal drift (+${peerZ}σ). Space flight qualified.`),
+    score: +rawScore.toFixed(4),
+    raw_score: +rawScore.toFixed(4),
+    calibrated_score: +calibratedScore.toFixed(2),
+    status: isReject ? "HIGH" : (isReview ? "WATCH" : "NOMINAL"),
+    quality_gate: "12/12 PASSED",
+    forecast_mean: +(cur * 1.1).toFixed(2),
+    forecast_std: 0.22,
+    lower_2sigma: +(cur * 0.8).toFixed(2),
+    upper_2sigma: +(cur * 1.4).toFixed(2),
+    forecast_horizon: 168.0,
+    traj: traj,
+    steps: [0, 24, 48, 72, 96, 120, 144],
+    checkpoints_labels: ["0h", "24h", "48h", "72h", "96h", "120h", "144h"],
+    drift: drift,
+    peer_mean: 0.14,
+    peer_std: 0.05,
+    peer_z: peerZ,
+    spec_min: -0.5,
+    spec_max: 1.5,
+    shap: [
+      { feature: "degradation_slope", val: `+${peerZ}σ`, score: +(rawScore * 0.9).toFixed(2), desc: "Checkpoint Acceleration" },
+      { feature: "cross_lot_variance", val: `+${(peerZ * 0.7).toFixed(1)}σ`, score: +(rawScore * 0.75).toFixed(2), desc: "Divergence from Nominal Lot" },
+      { feature: "spectral_kurtosis", val: `+${(peerZ * 0.6).toFixed(1)}σ`, score: +(rawScore * 0.55).toFixed(2), desc: "Signal Shape Anomaly" },
+      { feature: "thermal_stability", val: `+${(peerZ * 0.4).toFixed(1)}σ`, score: +(rawScore * 0.4).toFixed(2), desc: "Temperature Sensitivity" }
+    ],
+    is_live_sim: true
+  };
+}
+
+function toggleLiveSimulation() {
+  if (window.ISRO_SIMULATION.active) {
+    pauseLiveSimulation();
+  } else {
+    startLiveSimulation();
+  }
+}
+
+function startLiveSimulation() {
+  window.ISRO_SIMULATION.active = true;
+  updateSimButtonsUi(true);
+
+  showToast("🚀 Live Burn-In Simulation Started • Ingesting 168h Chamber Telemetry...", "success");
+
+  // Ingest first component immediately
+  simulateNextComponent();
+
+  // Then tick every interval
+  window.ISRO_SIMULATION.timer = setInterval(() => {
+    simulateNextComponent();
+  }, window.ISRO_SIMULATION.intervalMs);
+}
+
+function pauseLiveSimulation() {
+  window.ISRO_SIMULATION.active = false;
+  if (window.ISRO_SIMULATION.timer) {
+    clearInterval(window.ISRO_SIMULATION.timer);
+    window.ISRO_SIMULATION.timer = null;
+  }
+  updateSimButtonsUi(false);
+  showToast(`Simulation paused. ${window.ISRO_SIMULATION.streamedItems.length} live parts ingested.`, "info");
+}
+
+function resetLiveSimulation() {
+  window.ISRO_SIMULATION.active = false;
+  if (window.ISRO_SIMULATION.timer) {
+    clearInterval(window.ISRO_SIMULATION.timer);
+    window.ISRO_SIMULATION.timer = null;
+  }
+  window.ISRO_SIMULATION.streamedItems = [];
+  window.ISRO_SIMULATION.tickCount = 0;
+
+  updateSimButtonsUi(false, true);
+  refreshCurrentPageAfterSim();
+  showToast("Live simulation reset to baseline frozen dataset.", "info");
+}
+
+function simulateNextComponent() {
+  window.ISRO_SIMULATION.tickCount++;
+  const comp = generateSimulatedComponent(window.ISRO_SIMULATION.tickCount);
+  window.ISRO_SIMULATION.streamedItems.unshift(comp);
+
+  // Update telemetry status badge in header
+  const badge = document.getElementById('telemetryStatusBadge');
+  if (badge) {
+    badge.innerText = `STREAMING (+${window.ISRO_SIMULATION.streamedItems.length})`;
+  }
+
+  // If Reject (Critical Defect Intercepted), trigger aerospace alert toast!
+  if (comp.disposition === 'REJECT') {
+    showSimAlertToast(comp);
+  }
+
+  // Refresh active dashboard page
+  refreshCurrentPageAfterSim(comp);
+}
+
+function refreshCurrentPageAfterSim(latestComp) {
+  // If Overview Page:
+  if (typeof renderOverview === 'function') {
+    renderOverview();
+  }
+
+  // If Screening Page:
+  if (typeof renderTable === 'function') {
+    renderTable();
+    if (typeof updateFilterPillCounts === 'function') updateFilterPillCounts();
+    if (typeof renderCurrentLotChart === 'function') renderCurrentLotChart();
+
+    // Pulse highlight on the new row
+    setTimeout(() => {
+      const tbody = document.getElementById('screeningTableBody');
+      if (tbody && tbody.firstElementChild) {
+        tbody.firstElementChild.classList.add('sim-new-row');
+      }
+    }, 40);
+  }
+
+  // If Diagnostics Page:
+  if (document.getElementById('cmTN') && typeof updateDiagnosticsForSim === 'function') {
+    updateDiagnosticsForSim();
+  }
+}
+
+function updateSimButtonsUi(isActive, isReset = false) {
+  const btn = document.getElementById('btnLiveSim');
+  const btnText = document.getElementById('btnLiveSimText');
+  const resetBtn = document.getElementById('btnLiveReset');
+
+  if (!btn) return;
+
+  if (isActive) {
+    btn.classList.add('active');
+    if (btnText) btnText.innerText = 'Pause Stream';
+    if (resetBtn) resetBtn.style.display = 'inline-flex';
+  } else {
+    btn.classList.remove('active');
+    if (isReset) {
+      if (btnText) btnText.innerText = 'Live Simulation';
+      if (resetBtn) resetBtn.style.display = 'none';
+      const badge = document.getElementById('telemetryStatusBadge');
+      if (badge) badge.innerText = 'BENCHMARK EVAL';
+    } else {
+      if (btnText) btnText.innerText = 'Resume Stream';
+      if (resetBtn) resetBtn.style.display = 'inline-flex';
+    }
+  }
+}
+
+function showSimAlertToast(comp) {
+  let container = document.getElementById('toastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = 'toast-message';
+  toast.style.background = '#7F1D1D';
+  toast.style.border = '1px solid #EF4444';
+  toast.style.boxShadow = '0 10px 25px -5px rgba(239, 68, 68, 0.45)';
+  
+  toast.innerHTML = `
+    <div style="display:flex; align-items:flex-start; gap:10px; width:100%;">
+      <span style="font-size:16px;">⚠️</span>
+      <div style="flex:1;">
+        <div style="font-weight:800; font-size:11.5px; color:#FEE2E2; letter-spacing:0.02em;">CRITICAL DEFECT INTERCEPTED</div>
+        <div style="font-size:11px; color:#FFFFFF; margin-top:2px;">
+          Part <strong>${comp.id}</strong> &bull; Score: <strong style="color:#FCA5A5;">${comp.score.toFixed(4)}</strong> &bull; ${comp.lot}
+        </div>
+        <div style="margin-top:6px;">
+          <button onclick="pauseLiveSimulation(); navigateOrInspectComponent('${comp.id}'); this.closest('.toast-message').remove();" 
+                  style="background:#EF4444; border:none; color:#FFFFFF; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:4px; cursor:pointer;">
+            Inspect Part &rarr;
+          </button>
+        </div>
+      </div>
+      <button onclick="this.closest('.toast-message').remove();" style="background:transparent; border:none; color:#FCA5A5; cursor:pointer; font-size:14px; padding:0 4px;">&times;</button>
+    </div>
+  `;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    if (toast.parentElement) {
+      toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(8px)';
+      setTimeout(() => toast.remove(), 300);
+    }
+  }, 5000);
+}
+
+function navigateOrInspectComponent(compId) {
+  if (typeof openInspector === 'function') {
+    const comp = window.findComponentById(compId);
+    if (comp) openInspector(comp);
+  } else {
+    window.location.href = `screening.html?inspect=${encodeURIComponent(compId)}`;
+  }
+}
+
 
