@@ -3,9 +3,11 @@ import json
 import uuid
 import datetime
 from typing import Dict, Any, List, Optional
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+from src.api.upload_service import save_and_inspect_file, validate_mapped_upload, execute_upload_pipeline
 
 from src.ingestion.adapters import IntakeAdapterFactory
 from src.ingestion.registry import DatasetRegistry, DatasetMetadata
@@ -50,7 +52,7 @@ ENCODERS_BY_TYPE[np.bool_] = bool
 ENCODERS_BY_TYPE[np.ndarray] = lambda arr: arr.tolist()
 
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, FileResponse
 
 # Enable CORS for dashboard access
 app.add_middleware(
@@ -61,8 +63,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount Clean White Aerospace Dashboard
+# Clean URL Route Endpoints for Dedicated Dashboard Pages
+@app.get("/overview", include_in_schema=False)
+@app.get("/dashboard/overview", include_in_schema=False)
+def get_overview_page():
+    return FileResponse("dashboard/overview.html")
+
+@app.get("/diagnostics", include_in_schema=False)
+@app.get("/dashboard/diagnostics", include_in_schema=False)
+def get_diagnostics_page():
+    return FileResponse("dashboard/diagnostics.html")
+
+@app.get("/screening", include_in_schema=False)
+@app.get("/dashboard/screening", include_in_schema=False)
+def get_screening_page():
+    return FileResponse("dashboard/screening.html")
+
+# Mount Clean White Aerospace Dashboard & Documentation
 if os.path.exists("dashboard"):
+    if os.path.exists("docs"):
+        app.mount("/dashboard/docs", StaticFiles(directory="docs"), name="dashboard_docs")
     app.mount("/dashboard", StaticFiles(directory="dashboard", html=True), name="dashboard")
 
 @app.get("/", include_in_schema=False)
@@ -122,6 +142,17 @@ class QAActionRequest(BaseModel):
     notes: Optional[str] = ""
 
 
+class UploadValidateRequest(BaseModel):
+    saved_path: str
+    mapping: Dict[str, Any]
+
+
+class UploadProcessRequest(BaseModel):
+    saved_path: str
+    dataset_name: Optional[str] = "Custom Uploaded Dataset"
+    mapping: Dict[str, Any]
+
+
 # -------------------------------------------------------------
 # Endpoints
 # -------------------------------------------------------------
@@ -132,6 +163,46 @@ def health_check():
         "service": "SIH26170 Generalized Data Pipeline",
         "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
     }
+
+
+# -------------------------------------------------------------
+# Flexible Multi-Format Data Upload Endpoints (CSV, XLSX, JSON, TXT)
+# -------------------------------------------------------------
+@app.post("/api/upload/preview")
+async def upload_preview_endpoint(file: UploadFile = File(...)):
+    """Receives uploaded dataset, verifies constraints, detects schema, and returns preview."""
+    try:
+        content = await file.read()
+        res = save_and_inspect_file(file.filename, content)
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to parse uploaded file: {str(e)}")
+
+
+@app.post("/api/upload/validate")
+def upload_validate_endpoint(req: UploadValidateRequest):
+    """Executes pre-screening validation and 12-check quality gate on mapped upload."""
+    try:
+        res = validate_mapped_upload(req.saved_path, req.mapping)
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
+
+
+@app.post("/api/upload/process")
+def upload_process_endpoint(req: UploadProcessRequest):
+    """Executes full screening pipeline and anomaly intelligence on uploaded dataset."""
+    try:
+        res = execute_upload_pipeline(req.saved_path, req.dataset_name or "Custom Dataset", req.mapping)
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Pipeline processing failed: {str(e)}")
 
 
 @app.post("/datasets/register")

@@ -62,3 +62,7 @@ results/*_material_level_validation.csv
 !models/D1_final_frozen_config.pkl
 !models/ISRO_frozen_model.pkl
 !models/ISRO_frozen_config.pkl
+
+# User Uploaded Data Files
+data/uploads/*
+!data/uploads/.gitkeep

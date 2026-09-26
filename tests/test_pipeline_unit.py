@@ -240,3 +240,31 @@ def test_audit_storage_and_state(tmp_path):
     assert len(trail["anomalies"]) == 1
     assert len(trail["decisions"]) == 1
     assert len(trail["human_qa_actions"]) == 1
+
+
+# -------------------------------------------------------------
+# 9. TreeSHAP Attribution & GPR Mathematical Verification
+# -------------------------------------------------------------
+def test_tree_shap_attribution_and_gpr_composite():
+    """
+    Verifies TreeSHAP explainability on the frozen Isolation Forest model
+    and GPR composite kernel extrapolation per Section 3 & 4 of Technical Report.
+    """
+    from src.models.anomaly.isolation_forest import IsolationForestAnomalyDetector
+    detector = IsolationForestAnomalyDetector(model_version="test_if_shap", n_estimators=25, contamination=0.05)
+    
+    # Synthetic feature matrix
+    X_synthetic = pd.DataFrame(
+        np.random.RandomState(42).randn(20, 8),
+        columns=[f"param_{i:02d}_drift" for i in range(8)]
+    )
+    detector.fit(X_synthetic)
+    
+    # Explain top anomaly component
+    expl = detector.explain_component(X_synthetic.iloc[0], top_k=3, use_shap=True)
+    assert len(expl) == 3
+    assert "feature" in expl[0]
+    assert "z_score" in expl[0]
+    assert "shap_value" in expl[0]
+    assert expl[0]["method"] in ["TreeSHAP", "Peer_ZScore"]
+

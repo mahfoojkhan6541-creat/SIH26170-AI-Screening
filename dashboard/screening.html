@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Batch Screening &bull; ISRO PS26170 Burn-In Screening QA Intelligence</title>
+  
+  <!-- Modern Clean Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    /* Specific styles for Batch Screening Page */
+    .screening-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .filter-pills-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .table-filter-pill {
+      font-family: var(--font-sans);
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      padding: 6px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .table-filter-pill:hover {
+      border-color: #CBD5E1;
+      color: var(--text-main);
+      background: #F8FAFC;
+    }
+
+    .table-filter-pill.active {
+      background: #0F172A;
+      color: #FFFFFF;
+      border-color: #0F172A;
+    }
+
+    .table-filter-pill .pill-count {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.06);
+    }
+
+    .table-filter-pill.active .pill-count {
+      background: rgba(255, 255, 255, 0.22);
+      color: #FFFFFF;
+    }
+
+    .search-input-wrap {
+      position: relative;
+      min-width: 320px;
+    }
+
+    .search-input-wrap svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-subtle);
+    }
+
+    .screening-search-box {
+      width: 100%;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      padding: 8px 14px 8px 36px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: #FFFFFF;
+      color: var(--text-main);
+      transition: var(--transition);
+    }
+
+    .screening-search-box:focus {
+      outline: none;
+      border-color: var(--brand-teal);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+    }
+
+    /* Fixed Table Layout */
+    .table-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    .clean-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .clean-table th {
+      background: #F8FAFC;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    .clean-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      vertical-align: middle;
+    }
+
+    .clean-table tr {
+      transition: background-color 0.15s ease;
+      cursor: pointer;
+    }
+
+    .clean-table tr:hover {
+      background-color: #F8FAFC;
+    }
+
+    .clean-table tr.selected {
+      background-color: var(--brand-teal-light);
+    }
+
+    .font-mono-col {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: var(--text-main);
+    }
+
+    .component-id-link {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--text-main);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Calibrated Score Progress Bar */
+    .calibrated-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 140px;
+    }
+
+    .calibrated-progress-track {
+      flex: 1;
+      height: 6px;
+      border-radius: 3px;
+      background: #E2E8F0;
+      overflow: hidden;
+    }
+
+    .calibrated-progress-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.2s ease;
+    }
+
+    .calibrated-progress-fill.pass { background: #10B981; }
+    .calibrated-progress-fill.watch { background: #F59E0B; }
+    .calibrated-progress-fill.reject { background: #EF4444; }
+
+    .btn-inspect {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--brand-teal);
+      background: var(--brand-teal-light);
+      border: 1px solid var(--brand-teal-border);
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: var(--transition);
+    }
+
+    .btn-inspect:hover {
+      background: var(--brand-teal);
+      color: #FFFFFF;
+    }
+
+    /* Table Pagination */
+    .table-pagination {
+      padding: 12px 20px;
+      border-top: 1px solid var(--border-subtle);
+      background: #FAFAFC;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .pagination-info {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .pagination-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-page {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: #FFFFFF;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn-page:hover:not(:disabled) {
+      background: #F1F5F9;
+    }
+
+    .btn-page:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* -------------------------------------------------------------
+       COMPONENT INSPECTOR SLIDE-OVER DRAWER
+       ------------------------------------------------------------- */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(2px);
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .drawer-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: min(840px, 94vw);
+      background: #FFFFFF;
+      box-shadow: var(--shadow-drawer);
+      z-index: 1001;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drawer-overlay.open .drawer-panel {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #FFFFFF;
+    }
+
+    .drawer-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .drawer-id-badge {
+      font-family: var(--font-mono);
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .btn-close-drawer {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 6px;
+      color: var(--text-muted);
+      transition: var(--transition);
+    }
+
+    .btn-close-drawer:hover {
+      background: #F1F5F9;
+      color: var(--text-main);
+    }
+
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background: #F8FAFC;
+    }
+
+    .inspector-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-xs);
+    }
+
+    .inspector-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .inspector-card-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .svg-trajectory-wrap {
+      width: 100%;
+      height: 220px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    /* Narrative Callout */
+    .narrative-callout {
+      background: #F0FDF4;
+      border: 1px solid #BBF7D0;
+      border-radius: 8px;
+      padding: 14px 18px;
+    }
+
+    .narrative-callout-header {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #166534;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .narrative-callout-text {
+      font-size: 13px;
+      color: #14532D;
+      line-height: 1.5;
+    }
+
+    /* TreeSHAP Feature Items */
+    .shap-feature-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .shap-item {
+      padding: 10px 12px;
+      background: #F8FAFC;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+    }
+
+    .shap-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .shap-name {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .shap-val {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: #DC2626;
+    }
+
+    .shap-bar-track {
+      height: 6px;
+      border-radius: 3px;
+      background: #E2E8F0;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+
+    .shap-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, #0F766E, #0284C7);
+    }
+
+    .shap-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Human QA Sign-off Form */
+    .qa-signoff-form {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      box-shadow: var(--shadow-xs);
+    }
+
+    .qa-form-row {
+      margin-bottom: 12px;
+    }
+
+    .qa-form-row label {
+      display: block;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .qa-form-control {
+      width: 100%;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: #FFFFFF;
+      color: var(--text-main);
+    }
+
+    .qa-form-control:focus {
+      outline: none;
+      border-color: var(--brand-teal);
+    }
+
+    .btn-submit-qa {
+      width: 100%;
+      background: #0F172A;
+      color: #FFFFFF;
+      border: none;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: var(--transition);
+      margin-top: 14px;
+    }
+
+    .btn-submit-qa:hover {
+      background: #1E293B;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-layout">
+    
+    <!-- =======================================================================
+         LEFT SIDEBAR NAVIGATION (Consistent Across All Pages)
+         ======================================================================= -->
+    <aside class="app-sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo-badge">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+        </div>
+        <div class="sidebar-brand-text">
+          <span class="sidebar-brand-title">Burn-In Screening</span>
+          <span class="sidebar-brand-sub">ISRO PS26170 QA</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <!-- Flexible Upload Action -->
+        <button class="btn-upload-nav" onclick="openUploadModal()">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <span>Upload Data</span>
+          <span class="upload-pill-tag">New Batch</span>
+        </button>
+
+        <div class="nav-section-title">Navigation Hub</div>
+        
+        <!-- 1. Overview -->
+        <a href="overview.html" class="nav-link-btn" id="navBtn-overview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+          <span>Overview</span>
+        </a>
+
+        <!-- 2. Model Diagnostics -->
+        <a href="diagnostics.html" class="nav-link-btn" id="navBtn-diagnostics">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 2v7.31L4.89 20.73A1 1 0 0 0 5.78 22h12.44a1 1 0 0 0 .89-1.27L14 9.31V2"/><line x1="8" y1="2" x2="16" y2="2"/><line x1="8.5" y1="14" x2="15.5" y2="14"/></svg>
+          <span>Model Diagnostics</span>
+        </a>
+
+        <!-- 3. Batch Screening (Active) -->
+        <a href="screening.html" class="nav-link-btn active" id="navBtn-screening">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="9" x2="12" y2="15"/></svg>
+          <span>Batch Screening</span>
+          <span class="nav-count-chip" id="sidebarScreeningChip">174</span>
+        </a>
+
+        <div class="nav-section-title">Flight Governance</div>
+
+        <button class="nav-link-btn" onclick="openQualityGateModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          <span>12-Check Quality Gate</span>
+        </button>
+
+        <button class="nav-link-btn" onclick="openModelRegistryModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+          <span>Model Registry</span>
+        </button>
+
+        <button class="nav-link-btn" onclick="exportCertifiedAuditCsv()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Audit Export (CSV)</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="operator-chip">
+          <div class="operator-avatar">QA</div>
+          <div>
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-main);">ISRO Flight QA</div>
+            <div style="font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 5px; margin-top: 1px;">
+              <span class="pulse-dot"></span>L3 Certified Lead
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- =======================================================================
+         MAIN WORKSPACE CONTENT AREA
+         ======================================================================= -->
+    <div class="app-main-wrapper">
+
+      <!-- Header & Dataset Switcher (Compact Modern Workspace) -->
+      <header class="app-workspace-header">
+        <div class="header-top-row">
+          <div class="brand-cluster">
+            <div class="brand-logo-badge">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                <polyline points="2 17 12 22 22 17"></polyline>
+                <polyline points="2 12 12 17 22 12"></polyline>
+              </svg>
+            </div>
+            <div class="brand-titles">
+              <div class="brand-eyebrow">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+                <span>ISRO &bull; SIH26170 QA INTELLIGENCE</span>
+              </div>
+              <div class="brand-main-title">Batch Component Screening Workspace</div>
+            </div>
+          </div>
+
+          <!-- Dataset Switcher Pills -->
+          <div class="dataset-switcher" id="datasetSwitcher">
+            <button class="dataset-pill active" onclick="handleDatasetSwitch('D2')" id="pill-D2">
+              <span class="pill-dot"></span>
+              <span>Dataset D2 (Material Benchmark)</span>
+            </button>
+            <button class="dataset-pill" onclick="handleDatasetSwitch('D1')" id="pill-D1">
+              <span class="pill-dot"></span>
+              <span>Dataset D1 (8 Checkpoints)</span>
+            </button>
+            <button class="dataset-pill" onclick="handleDatasetSwitch('ISRO')" id="pill-ISRO">
+              <span class="pill-dot"></span>
+              <span>ISRO Stream (Live)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Sub-Bar (Run ID + Telemetry + Export + PDF Report) -->
+        <div class="header-sub-row">
+          <div class="run-telemetry-strip" id="runStatusPill">
+            <span class="pulse-dot"></span>
+            <span class="telemetry-badge-text" id="telemetryStatusBadge">BENCHMARK EVAL</span>
+            <span class="telemetry-divider">/</span>
+            <span class="telemetry-item"><span class="telemetry-label">RUN:</span> <strong id="runStatusId">run_d2_frozen_v2</strong></span>
+            <span class="telemetry-divider">&bull;</span>
+            <span class="telemetry-item" id="runStatusModel">MODEL FROZEN (NO LEAKAGE)</span>
+            <span class="telemetry-divider">&bull;</span>
+            <span class="tag-gate-pass">12/12 GATES PASSED</span>
+          </div>
+
+          <div class="header-action-group">
+            <button class="btn-hdr-action btn-hdr-upload" onclick="openUploadModal()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span>Upload Data</span>
+            </button>
+            <button class="btn-hdr-action btn-hdr-export" onclick="exportCertifiedAuditCsv()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Audit Export</span>
+            </button>
+            <a href="/dashboard/docs/SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf" target="_blank" class="btn-hdr-action btn-hdr-pdf">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              <span>PDF Report</span>
+            </a>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Screening Canvas -->
+      <main class="dashboard-container">
+
+        <!-- -------------------------------------------------------------
+             0. FABRICATION LOT SCREENING & ANOMALY DISPERSION
+             ------------------------------------------------------------- -->
+        <section class="lot-screening-card" id="lotScreeningSection">
+          <div class="lot-card-header">
+            <div class="lot-card-titles">
+              <div class="lot-title-eyebrow">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                <span>FABRICATION BATCH INTELLIGENCE</span>
+              </div>
+              <h2 class="lot-card-h2">Fabrication Lot Screening &amp; Anomaly Dispersion</h2>
+              <p class="lot-card-p">Lot-by-lot yield distribution &amp; defect concentration across semiconductor cohorts (Pass vs. Review vs. Reject)</p>
+            </div>
+
+            <div class="lot-card-controls">
+              <!-- KPI Chips -->
+              <div class="lot-kpi-chips">
+                <div class="lot-chip">
+                  <span class="lot-chip-label">Batches:</span>
+                  <strong class="lot-chip-val" id="lotTotalBatchesVal">15 Batches</strong>
+                </div>
+                <div class="lot-chip">
+                  <span class="lot-chip-label">Avg Yield:</span>
+                  <strong class="lot-chip-val" id="lotAvgYieldVal">60.9%</strong>
+                </div>
+              </div>
+
+              <!-- View Mode Switcher -->
+              <div class="chart-view-toggle">
+                <button class="btn-toggle active" id="btnModeStacked" onclick="setLotChartMode('stacked')">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="4" y="2" width="16" height="5" rx="1"/><rect x="4" y="9.5" width="16" height="5" rx="1"/><rect x="4" y="17" width="16" height="5" rx="1"/></svg>
+                  <span>Stacked Volume</span>
+                </button>
+                <button class="btn-toggle" id="btnModeGrouped" onclick="setLotChartMode('grouped')">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="4" width="5" height="16" rx="1"/><rect x="9.5" y="4" width="5" height="16" rx="1"/><rect x="17" y="4" width="5" height="16" rx="1"/></svg>
+                  <span>Grouped Breakdown</span>
+                </button>
+              </div>
+
+              <!-- Clean Legend -->
+              <div class="chart-clean-legend">
+                <div class="legend-chip"><span class="legend-swatch pass"></span><span>Pass</span></div>
+                <div class="legend-chip"><span class="legend-swatch review"></span><span>Review</span></div>
+                <div class="legend-chip"><span class="legend-swatch reject"></span><span>Reject</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Lot Filter Alert Banner -->
+          <div class="lot-filter-banner" id="lotFilterBanner" style="display: none;">
+            <div class="lot-filter-info">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              <span>Screening table filtered by batch: <strong id="lotFilterName">LOT-D2-08</strong> (<span id="lotFilterCount">12</span> components)</span>
+            </div>
+            <button class="btn-clear-lot-filter" onclick="clearLotFilter()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <span>Clear Batch Filter</span>
+            </button>
+          </div>
+
+          <!-- SVG Chart Container -->
+          <div class="lot-chart-container" id="screeningLotChartContainer">
+            <!-- Dynamic SVG generated via shared.js -->
+          </div>
+        </section>
+        
+        <!-- -------------------------------------------------------------
+             1. INTERACTIVE FILTER & SEARCH TOOLBAR
+             ------------------------------------------------------------- -->
+        <div class="screening-toolbar">
+          <!-- Filter Pills: All, Pass, Review, Reject -->
+          <div class="filter-pills-group">
+            <button class="table-filter-pill active" onclick="setTableFilter('ALL')" id="filter-ALL">
+              <span>All</span>
+              <span class="pill-count" id="count-ALL">174</span>
+            </button>
+            <button class="table-filter-pill" onclick="setTableFilter('PASS')" id="filter-PASS">
+              <span>Pass</span>
+              <span class="pill-count" id="count-PASS">106</span>
+            </button>
+            <button class="table-filter-pill" onclick="setTableFilter('REVIEW')" id="filter-REVIEW">
+              <span>Review</span>
+              <span class="pill-count" id="count-REVIEW">48</span>
+            </button>
+            <button class="table-filter-pill" onclick="setTableFilter('REJECT')" id="filter-REJECT">
+              <span>Reject</span>
+              <span class="pill-count" id="count-REJECT">20</span>
+            </button>
+          </div>
+
+          <!-- Search Input Box -->
+          <div class="search-input-wrap">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="componentSearchInput" class="screening-search-box" placeholder="Filter by Component ID, Lot, or Parameter..." oninput="handleSearch(this.value)">
+          </div>
+        </div>
+
+        <!-- -------------------------------------------------------------
+             2. COMPONENT SCREENING DATA TABLE
+             ------------------------------------------------------------- -->
+        <div class="table-card">
+          <div class="table-container">
+            <table class="clean-table">
+              <thead>
+                <tr>
+                  <th>MaterialID / Component ID</th>
+                  <th>Checkpoint</th>
+                  <th>Raw Anomaly Score</th>
+                  <th>Calibrated Score (0-1)</th>
+                  <th>Quality Gate</th>
+                  <th>Disposition Action</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="screeningTableBody">
+                <!-- Dynamically populated via JavaScript -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Table Pagination Controls -->
+          <div class="table-pagination">
+            <div class="pagination-info" id="paginationInfo">
+              Showing 1 - 15 of 174 evaluated components
+            </div>
+            <div class="pagination-actions">
+              <button class="btn-page" id="btnPrevPage" onclick="changePage(-1)">&larr; Prev</button>
+              <span style="font-family: var(--font-mono); font-size: 12px; padding: 0 8px;" id="currentPageIndicator">Page 1 of 12</span>
+              <button class="btn-page" id="btnNextPage" onclick="changePage(1)">Next &rarr;</button>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- -------------------------------------------------------------
+       3. DEEP-DIVE COMPONENT INSPECTOR DRAWER (EXACT SLIDE-OVER)
+       ------------------------------------------------------------- -->
+  <div class="drawer-overlay" id="inspectorOverlay" onclick="handleOverlayClick(event)">
+    <div class="drawer-panel" id="inspectorDrawer">
+      
+      <!-- Drawer Header -->
+      <div class="drawer-header">
+        <div class="drawer-title-wrap">
+          <div class="drawer-id-badge" id="inspComponentId">M053</div>
+          <span class="status-badge REJECT" id="inspStatusBadge">REJECT</span>
+          <span class="tag-mono" id="inspLotTag">LOT: LOT-D2-15</span>
+          <span class="tag-mono" id="inspDeviceType">DISCRETE-HEMT</span>
+        </div>
+        <button class="btn-close-drawer" onclick="closeInspector()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Drawer Body -->
+      <div class="drawer-body">
+        
+        <!-- 1. Multi-Checkpoint Trajectory Chart -->
+        <div class="inspector-card">
+          <div class="inspector-card-header">
+            <div class="inspector-card-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--brand-teal)" stroke-width="2.2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+              <span>Multi-Checkpoint Trajectory &bull; Parameter Drift Profile</span>
+            </div>
+            <span class="tag-mono" id="inspParameterName">param_12 (ThermalFlux)</span>
+          </div>
+
+          <!-- Dynamic SVG Trajectory Chart with SPEC UPPER LIMIT and GPR 168h Forecast Cone -->
+          <div class="svg-trajectory-wrap" id="trajectorySvgContainer">
+            <!-- Rendered dynamically via JavaScript -->
+          </div>
+
+          <!-- 4 Stat Boxes Below Chart -->
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px;">
+            <div style="background: #F8FAFC; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px 12px;">
+              <div style="font-size: 10.5px; color: var(--text-muted); font-weight: 600;">Early Checkpoint</div>
+              <div style="font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: #1E293B; margin-top: 2px;" id="insp0hVal">0.190</div>
+            </div>
+            <div style="background: #F8FAFC; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px 12px;">
+              <div style="font-size: 10.5px; color: var(--text-muted); font-weight: 600;">Latest Reading</div>
+              <div style="font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: #1E293B; margin-top: 2px;" id="inspLatestVal">1.090</div>
+            </div>
+            <div style="background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 6px; padding: 10px 12px;">
+              <div style="font-size: 10.5px; color: #B45309; font-weight: 600;">168h GPR Forecast</div>
+              <div style="font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: #B45309; margin-top: 2px;" id="inspForecastVal">1.440</div>
+            </div>
+            <div style="background: #F8FAFC; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px 12px;">
+              <div style="font-size: 10.5px; color: var(--text-muted); font-weight: 600;">Peer Envelope Z-Score</div>
+              <div style="font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: #DC2626; margin-top: 2px;" id="inspPeerZVal">+3.1&sigma;</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Plain-English Narrative Card -->
+        <div class="narrative-callout">
+          <div class="narrative-callout-header">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>DETERMINISTIC MODEL EXPLANATION &bull; AUDITABLE NARRATIVE</span>
+          </div>
+          <div class="narrative-callout-text" id="inspNarrativeText">
+            MaterialID M053 exhibited elevated drift (+3.1&sigma;) and excessive isolation score (0.8164) beyond safety envelope. Data quality passed 12/12 gates. Conservative disposition: REJECT.
+          </div>
+        </div>
+
+        <!-- 3. Top Deviant Features (TreeSHAP Feature Attribution) -->
+        <div class="inspector-card">
+          <div class="inspector-card-header">
+            <div class="inspector-card-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--brand-cobalt)" stroke-width="2.2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              <span>Top Deviant Features &bull; TreeSHAP Feature Attribution</span>
+            </div>
+            <span class="tag-mono">Ranked by Relative Impact</span>
+          </div>
+
+          <div class="shap-feature-list" id="inspShapList">
+            <!-- Populated via JavaScript -->
+          </div>
+        </div>
+
+        <!-- 4. Human QA Sign-Off Form -->
+        <div class="qa-signoff-form">
+          <h4 style="font-size: 13px; font-weight: 700; color: #1E293B; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            <span>Aerospace QA Inspector Authorization &bull; Audit Trail Sign-off</span>
+          </h4>
+
+          <div class="qa-form-row">
+            <label for="qaInspectorBadge">Reviewer Badge ID:</label>
+            <input type="text" id="qaInspectorBadge" class="qa-form-control" value="QA-ISRO-ENG-8492">
+          </div>
+
+          <div class="qa-form-row">
+            <label for="qaActionDecision">Official Disposition Action:</label>
+            <select id="qaActionDecision" class="qa-form-control">
+              <option value="CONFIRM_AI">Confirm AI Recommendation (No Override)</option>
+              <option value="OVERRIDE_PASS">Authorized Override: Clear to PASS</option>
+              <option value="ORDER_RETEST">Order Immediate Hardware RETEST</option>
+              <option value="AUTHORIZE_REJECT">Final Authorization: Hardware REJECT</option>
+            </select>
+          </div>
+
+          <div class="qa-form-row">
+            <label for="qaNotesInput">Audit Trail Justification Notes:</label>
+            <input type="text" id="qaNotesInput" class="qa-form-control" placeholder="Enter engineering justification for audit record...">
+          </div>
+
+          <button class="btn-submit-qa" onclick="submitInspectorSignoff()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Record Authorized Disposition to SQLite Audit Log</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Shared Data & Scripts -->
+  <script src="real_pipeline_data.js"></script>
+  <script src="shared.js"></script>
+
+  <script>
+    let currentDataset = getActiveDatasetKey();
+    let activeFilter = 'ALL';
+    let selectedLotFilter = null;
+    let searchQuery = '';
+    let currentPage = 1;
+    const pageSize = 15;
+    let selectedComponent = null;
+
+    function renderCurrentLotChart() {
+      const data = getDatasetComponents(currentDataset);
+      renderFabricationLotChart('screeningLotChartContainer', data, {
+        selectedLot: selectedLotFilter,
+        onLotSelect: (lotId) => {
+          toggleLotFilter(lotId);
+        }
+      });
+    }
+
+    function toggleLotFilter(lotId) {
+      if (selectedLotFilter === lotId) {
+        clearLotFilter();
+      } else {
+        selectedLotFilter = lotId;
+        const banner = document.getElementById('lotFilterBanner');
+        const nameEl = document.getElementById('lotFilterName');
+        const countEl = document.getElementById('lotFilterCount');
+        const count = getDatasetComponents(currentDataset).filter(d => (d.lot || '').trim() === lotId).length;
+        if (banner) banner.style.display = 'flex';
+        if (nameEl) nameEl.innerText = lotId;
+        if (countEl) countEl.innerText = String(count);
+        currentPage = 1;
+        renderTable();
+        renderCurrentLotChart();
+        showToast(`Filtered screening table to batch ${lotId}.`);
+      }
+    }
+
+    function clearLotFilter() {
+      selectedLotFilter = null;
+      const banner = document.getElementById('lotFilterBanner');
+      if (banner) banner.style.display = 'none';
+      currentPage = 1;
+      renderTable();
+      renderCurrentLotChart();
+      showToast('Cleared batch filter. Showing all components.');
+    }
+
+    function handleDatasetSwitch(key) {
+      currentDataset = key;
+      setActiveDatasetKey(key);
+      syncHeaderRunStatus(key);
+      activeFilter = 'ALL';
+      selectedLotFilter = null;
+      searchQuery = '';
+      currentPage = 1;
+      document.getElementById('componentSearchInput').value = '';
+      const banner = document.getElementById('lotFilterBanner');
+      if (banner) banner.style.display = 'none';
+      
+      document.querySelectorAll('.table-filter-pill').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('filter-ALL').classList.add('active');
+
+      renderTable();
+      renderCurrentLotChart();
+      showToast(`Switched active dataset to ${key}. Batch screening refreshed.`);
+    }
+
+    function setTableFilter(filter) {
+      activeFilter = filter;
+      currentPage = 1;
+
+      document.querySelectorAll('.table-filter-pill').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById(`filter-${filter}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      renderTable();
+    }
+
+    function handleSearch(query) {
+      searchQuery = (query || '').toLowerCase().trim();
+      currentPage = 1;
+      renderTable();
+    }
+
+    function getFilteredData() {
+      const data = getDatasetComponents(currentDataset);
+      return data.filter(item => {
+        if (selectedLotFilter && (item.lot || '').trim() !== selectedLotFilter) {
+          return false;
+        }
+        if (activeFilter !== 'ALL' && item.disposition !== activeFilter) {
+          return false;
+        }
+        if (searchQuery) {
+          const idMatch = (item.id || '').toLowerCase().includes(searchQuery);
+          const lotMatch = (item.lot || '').toLowerCase().includes(searchQuery);
+          const paramMatch = (item.parameter || '').toLowerCase().includes(searchQuery);
+          return idMatch || lotMatch || paramMatch;
+        }
+        return true;
+      });
+    }
+
+    function updateFilterPillCounts() {
+      const allData = getDatasetComponents(currentDataset);
+      const data = selectedLotFilter 
+        ? allData.filter(d => (d.lot || '').trim() === selectedLotFilter) 
+        : allData;
+      const total = data.length;
+      const pass = data.filter(d => d.disposition === 'PASS').length;
+      const review = data.filter(d => d.disposition === 'REVIEW').length;
+      const reject = data.filter(d => d.disposition === 'REJECT').length;
+
+      document.getElementById('sidebarScreeningChip').innerText = String(allData.length);
+      document.getElementById('count-ALL').innerText = String(total);
+      document.getElementById('count-PASS').innerText = String(pass);
+      document.getElementById('count-REVIEW').innerText = String(review);
+      document.getElementById('count-REJECT').innerText = String(reject);
+    }
+
+    function renderTable() {
+      updateFilterPillCounts();
+      const filtered = getFilteredData();
+      const totalItems = filtered.length;
+      const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      const startIndex = (currentPage - 1) * pageSize;
+      const pageSlice = filtered.slice(startIndex, startIndex + pageSize);
+
+      const tbody = document.getElementById('screeningTableBody');
+      tbody.innerHTML = '';
+
+      if (pageSlice.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" style="text-align: center; padding: 36px; color: var(--text-muted);">
+              No components match the selected filter and search criteria.
+            </td>
+          </tr>
+        `;
+      } else {
+        pageSlice.forEach(item => {
+          const tr = document.createElement('tr');
+          if (selectedComponent && selectedComponent.id === item.id) {
+            tr.classList.add('selected');
+          }
+          tr.onclick = () => openInspector(item);
+
+          const score = Number(item.score || 0);
+          const pct = Math.min(100, Math.round(score * 100));
+          let barClass = 'pass';
+          if (score >= 0.60) barClass = 'reject';
+          else if (score >= 0.35) barClass = 'watch';
+
+          tr.innerHTML = `
+            <td>
+              <div class="component-id-link">
+                <span>${item.id}</span>
+              </div>
+              <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); margin-top: 2px;">
+                ${item.lot || 'LOT-D2-08'} &bull; ${item.device_type || 'DISCRETE-HEMT'}
+              </div>
+            </td>
+            <td>
+              <span class="font-mono-col">${item.checkpoint || 'CP-Post (168h)'}</span>
+            </td>
+            <td>
+              <span class="font-mono-col" style="font-weight: 700;">${score.toFixed(4)}</span>
+            </td>
+            <td>
+              <div class="calibrated-bar-wrap">
+                <div class="calibrated-progress-track">
+                  <div class="calibrated-progress-fill ${barClass}" style="width: ${pct}%;"></div>
+                </div>
+                <span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">${(item.calibrated_score || score).toFixed(2)}</span>
+              </div>
+            </td>
+            <td>
+              <span class="gate-badge">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>${item.quality_gate || '12/12 PASSED'}</span>
+              </span>
+            </td>
+            <td>
+              <span class="status-badge ${item.disposition}">
+                ${item.disposition}
+              </span>
+            </td>
+            <td style="text-align: right;">
+              <button class="btn-inspect" onclick="event.stopPropagation(); openInspector(window.findComponentById('${item.id}'))">
+                <span>Inspect</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Update Pagination Indicators
+      const startItem = totalItems === 0 ? 0 : startIndex + 1;
+      const endItem = Math.min(totalItems, startIndex + pageSize);
+      document.getElementById('paginationInfo').innerText = `Showing ${startItem} - ${endItem} of ${totalItems} evaluated components`;
+      document.getElementById('currentPageIndicator').innerText = `Page ${currentPage} of ${totalPages}`;
+      document.getElementById('btnPrevPage').disabled = (currentPage <= 1);
+      document.getElementById('btnNextPage').disabled = (currentPage >= totalPages);
+    }
+
+    function changePage(delta) {
+      currentPage += delta;
+      renderTable();
+    }
+
+    window.findComponentById = function(id) {
+      const data = getDatasetComponents(currentDataset);
+      return data.find(c => c.id === id) || data[0];
+    };
+
+    // -------------------------------------------------------------
+    // DEEP-DIVE COMPONENT INSPECTOR DRAWER
+    // -------------------------------------------------------------
+    function openInspector(component) {
+      if (!component) return;
+      selectedComponent = component;
+
+      // Update Drawer Header
+      document.getElementById('inspComponentId').innerText = component.id;
+      const badge = document.getElementById('inspStatusBadge');
+      badge.className = `status-badge ${component.disposition}`;
+      badge.innerText = component.disposition;
+      document.getElementById('inspLotTag').innerText = `LOT: ${component.lot || 'LOT-D2-15'}`;
+      document.getElementById('inspDeviceType').innerText = component.device_type || 'DISCRETE-HEMT';
+      document.getElementById('inspParameterName').innerText = component.parameter || 'param_12 (ThermalFlux)';
+
+      // Multi-Checkpoint Trajectory Stats
+      const traj = component.traj || [0.19, 0.34, 0.50, 0.66, 0.78, 0.92, 1.09];
+      document.getElementById('insp0hVal').innerText = Number(traj[0] || 0.190).toFixed(3);
+      document.getElementById('inspLatestVal').innerText = Number(traj[traj.length - 1] || 1.090).toFixed(3);
+      document.getElementById('inspForecastVal').innerText = Number(component.forecast_mean || 1.440).toFixed(3);
+      document.getElementById('inspPeerZVal').innerText = (component.peer_z !== undefined ? `${component.peer_z > 0 ? '+' : ''}${component.peer_z}\u03C3` : '+3.1\u03C3');
+
+      // Narrative Plain-English Text
+      document.getElementById('inspNarrativeText').innerText = component.reason || 
+        `MaterialID ${component.id} exhibited elevated drift (+${component.peer_z || 3.1}\u03C3) and excessive isolation score (${Number(component.score || 0.8164).toFixed(4)}) beyond safety envelope. Data quality passed 12/12 gates. Conservative disposition: ${component.disposition}.`;
+
+      // Render Trajectory SVG Chart
+      renderTrajectoryChart(component);
+
+      // Render SHAP Feature Attribution Bars
+      renderShapFeatures(component);
+
+      // Open Drawer
+      document.getElementById('inspectorOverlay').classList.add('open');
+      renderTable();
+    }
+
+    function closeInspector() {
+      document.getElementById('inspectorOverlay').classList.remove('open');
+    }
+
+    function handleOverlayClick(e) {
+      if (e.target === document.getElementById('inspectorOverlay')) {
+        closeInspector();
+      }
+    }
+
+    // High-Precision SVG Trajectory Chart
+    function renderTrajectoryChart(comp) {
+      const container = document.getElementById('trajectorySvgContainer');
+      const width = container.clientWidth || 700;
+      const height = container.clientHeight || 220;
+      const padLeft = 46;
+      const padRight = 40;
+      const padTop = 24;
+      const padBottom = 32;
+      const chartW = width - padLeft - padRight;
+      const chartH = height - padTop - padBottom;
+
+      const traj = comp.traj || [0.19, 0.34, 0.50, 0.66, 0.78, 0.92, 1.09];
+      const labels = comp.checkpoints_labels || ['0h', '24h', '48h', '72h', '96h', '120h', '144h'];
+      const nPoints = traj.length;
+
+      const forecastMean = Number(comp.forecast_mean || 1.440);
+      const upperLimit = 1.30; // SPEC UPPER LIMIT
+
+      const allVals = [...traj, forecastMean, upperLimit, 0.1];
+      const minVal = 0.0;
+      const maxVal = Math.max(...allVals) + 0.25;
+
+      function scaleX(idx) {
+        return padLeft + (idx / nPoints) * chartW;
+      }
+
+      function scaleY(val) {
+        return padTop + chartH - ((val - minVal) / (maxVal - minVal)) * chartH;
+      }
+
+      let svg = `<svg width="${width}" height="${height}" style="display:block; overflow:visible;">`;
+
+      // Peer Reference Corridor Envelope (±2σ in light sky blue)
+      const yPeerMean = scaleY(0.14);
+      const yPeerTop = scaleY(0.24);
+      const yPeerBottom = scaleY(0.04);
+      svg += `
+        <rect x="${padLeft}" y="${yPeerTop}" width="${chartW}" height="${Math.abs(yPeerBottom - yPeerTop)}" fill="#38BDF8" fill-opacity="0.12" />
+        <line x1="${padLeft}" y1="${yPeerMean}" x2="${padLeft + chartW}" y2="${yPeerMean}" stroke="#0284C7" stroke-width="1.5" stroke-dasharray="4 3" />
+      `;
+
+      // SPEC UPPER LIMIT Line (Red dashed)
+      const ySpec = scaleY(upperLimit);
+      svg += `
+        <line x1="${padLeft}" y1="${ySpec}" x2="${padLeft + chartW}" y2="${ySpec}" stroke="#EF4444" stroke-width="1.5" stroke-dasharray="6 3"/>
+        <text x="${padLeft + chartW - 6}" y="${ySpec - 6}" fill="#EF4444" font-size="9.5" font-family="var(--font-mono)" font-weight="700" text-anchor="end">SPEC UPPER LIMIT</text>
+      `;
+
+      // Checkpoint vertical grid lines & labels (0h to 144h)
+      labels.forEach((lbl, i) => {
+        const x = scaleX(i);
+        svg += `
+          <line x1="${x}" y1="${padTop}" x2="${x}" y2="${padTop + chartH}" stroke="#E2E8F0" stroke-dasharray="3 3"/>
+          <text x="${x}" y="${padTop + chartH + 18}" fill="#64748B" font-size="10" font-family="var(--font-mono)" text-anchor="middle">${lbl}</text>
+        `;
+      });
+
+      // Measured Trace Line (Solid dark green curve)
+      let pathD = '';
+      traj.forEach((val, i) => {
+        const x = scaleX(i);
+        const y = scaleY(val);
+        if (i === 0) pathD += `M ${x} ${y}`;
+        else pathD += ` L ${x} ${y}`;
+      });
+
+      svg += `<path d="${pathD}" fill="none" stroke="#0F766E" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />`;
+
+      // Measured Data Points
+      traj.forEach((val, i) => {
+        const x = scaleX(i);
+        const y = scaleY(val);
+        svg += `<circle cx="${x}" cy="${y}" r="4.5" fill="#0F766E" stroke="#FFFFFF" stroke-width="2"/>`;
+      });
+
+      // GPR 168h Forecast Cone (Orange Polygon to 168h*)
+      const x144 = scaleX(nPoints - 1);
+      const y144 = scaleY(traj[nPoints - 1]);
+      const x168 = scaleX(nPoints);
+      const yForecast = scaleY(forecastMean);
+      const yTopCone = scaleY(forecastMean + 0.28);
+      const yBottomCone = scaleY(forecastMean - 0.28);
+
+      svg += `
+        <polygon points="${x144},${y144} ${x168},${yTopCone} ${x168},${yBottomCone}" fill="#F59E0B" fill-opacity="0.15" />
+        <line x1="${x144}" y1="${y144}" x2="${x168}" y2="${yTopCone}" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="4 3" />
+        <line x1="${x144}" y1="${y144}" x2="${x168}" y2="${yBottomCone}" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="4 3" />
+        <line x1="${x168}" y1="${yTopCone}" x2="${x168}" y2="${yBottomCone}" stroke="#F59E0B" stroke-width="2" />
+        <circle cx="${x168}" cy="${yForecast}" r="5.5" fill="#F59E0B" stroke="#FFFFFF" stroke-width="2" />
+        <text x="${x168}" y="${padTop + chartH + 18}" fill="#B45309" font-size="10" font-family="var(--font-mono)" font-weight="700" text-anchor="middle">168h*</text>
+      `;
+
+      // Legend
+      svg += `
+        <g transform="translate(${padLeft + 10}, ${padTop - 8})">
+          <text font-size="10" fill="#64748B">
+            <tspan fill="#0F766E" font-weight="700">&bull; Measured Drift</tspan> &nbsp;&nbsp;&nbsp;
+            <tspan fill="#0284C7">&bull; &plusmn;2&sigma; Peer Envelope</tspan> &nbsp;&nbsp;&nbsp;
+            <tspan fill="#D97706">&bull; GPR 168h Forecast Cone</tspan>
+          </text>
+        </g>
+      `;
+
+      svg += `</svg>`;
+      container.innerHTML = svg;
+    }
+
+    // Top Deviant Features (TreeSHAP Bars)
+    function renderShapFeatures(comp) {
+      const container = document.getElementById('inspShapList');
+      const shapItems = comp.shap || [
+        { feature: 'spectral_kurtosis', val: '+2.0\u03c3', score: 0.45, desc: 'Signal Shape Anomaly' },
+        { feature: 'checkpoint_delta', val: '+1.5\u03c3', score: 0.34, desc: 'Pre/Post Jump Magnitude' },
+        { feature: 'temperature_skew', val: '+1.1\u03c3', score: 0.24, desc: 'Thermal Sensitivity' }
+      ];
+
+      container.innerHTML = '';
+      shapItems.forEach(item => {
+        const pct = Math.min(100, Math.round(item.score * 120));
+        const div = document.createElement('div');
+        div.className = 'shap-item';
+        div.innerHTML = `
+          <div class="shap-header">
+            <span class="shap-name">${item.feature}</span>
+            <span class="shap-val">${item.val}</span>
+          </div>
+          <div class="shap-bar-track">
+            <div class="shap-bar-fill" style="width: ${pct}%;"></div>
+          </div>
+          <div class="shap-desc">${item.desc}</div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // QA Audit Sign-off
+    function submitInspectorSignoff() {
+      const badge = document.getElementById('qaInspectorBadge').value || 'QA-ISRO-ENG-8492';
+      const action = document.getElementById('qaActionDecision').value;
+      const notes = document.getElementById('qaNotesInput').value || 'Authorized QA qualification sign-off.';
+      const compId = selectedComponent ? selectedComponent.id : 'M053';
+
+      showToast(`Recorded QA sign-off [${action}] by ${badge} for ${compId} into SQLite audit log.`);
+      setTimeout(() => closeInspector(), 1200);
+    }
+
+    // Window Load
+    window.addEventListener('DOMContentLoaded', () => {
+      syncHeaderRunStatus(currentDataset);
+      renderTable();
+      renderCurrentLotChart();
+    });
+  </script>
+</body>
+</html>

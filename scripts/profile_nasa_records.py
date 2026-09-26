@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 
 def profile_device_measurements():
-    mat_files = sorted(glob.glob("Device*.mat"))
+    mat_files = sorted(glob.glob("data/raw/Device*.mat") + glob.glob("Device*.mat"))
     print(f"Profiling {len(mat_files)} NASA device files...\n")
     
     device_dfs = {}
