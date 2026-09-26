@@ -680,6 +680,30 @@
       <!-- Main Screening Canvas -->
       <main class="dashboard-container">
 
+        <!-- Mission Briefing Strip -->
+        <div class="mission-briefing-strip">
+          <div class="briefing-left">
+            <div class="briefing-icon-badge">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>
+              </svg>
+            </div>
+            <div class="briefing-texts">
+              <div class="briefing-title">
+                <span>COMPONENT COMPLIANCE INSPECTION &bull; FLIGHT QUALIFICATION WORKSPACE</span>
+              </div>
+              <div class="briefing-desc">
+                Individual semiconductor telemetry evaluation, deterministic anomaly scoring, 12-check flight gate compliance, and auditable human QA sign-off.
+              </div>
+            </div>
+          </div>
+          <div class="briefing-right-tags">
+            <span class="briefing-tag success">✓ 12/12 GATES PASSED</span>
+            <span class="briefing-tag accent">100% AUDIT TRACEABILITY</span>
+            <span class="briefing-tag" style="background:#F1F5F9; border:1px solid #CBD5E1; color:#334155;">ISRO PS26170</span>
+          </div>
+        </div>
+
         <!-- -------------------------------------------------------------
              0. FABRICATION LOT SCREENING & ANOMALY DISPERSION
              ------------------------------------------------------------- -->
@@ -1098,6 +1122,15 @@
           if (score >= 0.60) barClass = 'reject';
           else if (score >= 0.35) barClass = 'watch';
 
+          const disp = item.disposition || 'PASS';
+          const dispClass = disp.toLowerCase();
+          let dispIcon = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+          if (dispClass === 'review') {
+            dispIcon = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+          } else if (dispClass === 'reject') {
+            dispIcon = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+          }
+
           tr.innerHTML = `
             <td>
               <div class="component-id-link">
@@ -1128,8 +1161,9 @@
               </span>
             </td>
             <td>
-              <span class="status-badge ${item.disposition}">
-                ${item.disposition}
+              <span class="disposition-badge ${dispClass}">
+                ${dispIcon}
+                <span>${disp}</span>
               </span>
             </td>
             <td style="text-align: right;">

@@ -565,6 +565,207 @@ a {
 }
 
 /* -------------------------------------------------------------
+   EXECUTIVE MISSION BRIEFING STRIP (JUDGE & DEMO CONTEXT)
+   ------------------------------------------------------------- */
+.mission-briefing-strip {
+  background: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  flex-wrap: wrap;
+}
+
+.briefing-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 300px;
+}
+
+.briefing-icon-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--brand-teal-light);
+  border: 1px solid var(--brand-teal-border);
+  color: var(--brand-teal);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.briefing-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.briefing-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: -0.01em;
+}
+
+.briefing-desc {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.briefing-right-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.briefing-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.briefing-tag.accent {
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1D4ED8;
+}
+
+.briefing-tag.success {
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  color: #047857;
+}
+
+/* -------------------------------------------------------------
+   EDUCATIONAL JUDGE'S GUIDE CALLOUT (PLAIN-ENGLISH CLARITY)
+   ------------------------------------------------------------- */
+.judge-guide-callout {
+  background: linear-gradient(135deg, #F0FDFA, #F8FAFC);
+  border: 1px solid #99F6E4;
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  margin-top: 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.judge-guide-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #0F766E;
+  color: #FFFFFF;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.judge-guide-content {
+  flex: 1;
+}
+
+.judge-guide-content h4 {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #0F766E;
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.judge-guide-content p {
+  font-size: 11.5px;
+  color: #1E293B;
+  margin-top: 4px;
+  line-height: 1.45;
+}
+
+.judge-guide-content .sub-bullets {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.judge-guide-pill {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(15, 118, 110, 0.25);
+  padding: 3px 8px;
+  border-radius: 4px;
+  color: #0F766E;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Status Badges */
+.disposition-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 5px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.disposition-badge.pass {
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  color: #047857;
+}
+
+.disposition-badge.review {
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  color: #B45309;
+}
+
+.disposition-badge.reject {
+  background: #FEF2F2;
+  border: 1px solid #FECDD3;
+  color: #B91C1C;
+}
+
+.kpi-meaning-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.35;
+  margin-top: 6px;
+  border-top: 1px dashed var(--border-color);
+  padding-top: 5px;
+}
+
+
+/* -------------------------------------------------------------
    FABRICATION LOT SCREENING & DEFECT DISPERSION CARD
    ------------------------------------------------------------- */
 .lot-screening-card {
@@ -1548,5 +1749,18 @@ a {
   }
   .dashboard-container {
     padding: 18px 16px 40px;
+  }
+  .upload-steps-bar {
+    padding: 10px 14px;
+    overflow-x: auto;
+    gap: 8px;
+    justify-content: flex-start;
+  }
+  .step-indicator span:last-child {
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .step-separator {
+    min-width: 12px;
   }
 }

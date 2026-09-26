@@ -193,7 +193,7 @@ function resetUploadWizard() {
 
 function setUploadWizardStep(stepNum) {
   uploadState.step = stepNum;
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 5; i++) {
     const el = document.getElementById(`uploadStepView-${i}`);
     const ind = document.getElementById(`stepInd-${i}`);
     if (el) el.style.display = (i === stepNum) ? 'block' : 'none';
@@ -213,26 +213,31 @@ function createUploadModalDom() {
   div.innerHTML = `
     <div class="modal-card" style="max-width: 860px; max-height: 90vh;">
       
-      <!-- Wizard Progress Header -->
+      <!-- Wizard Progress Header (5-Stage Qualification Pipeline) -->
       <div class="upload-steps-bar">
         <div class="step-indicator active" id="stepInd-1">
           <span class="step-num">1</span>
-          <span>Upload File</span>
+          <span>Upload Data</span>
         </div>
         <div class="step-separator"></div>
         <div class="step-indicator" id="stepInd-2">
           <span class="step-num">2</span>
-          <span>Preview &amp; Map</span>
+          <span>Validate &amp; Map</span>
         </div>
         <div class="step-separator"></div>
         <div class="step-indicator" id="stepInd-3">
           <span class="step-num">3</span>
-          <span>Quality Gate</span>
+          <span>12-Check Gate</span>
         </div>
         <div class="step-separator"></div>
         <div class="step-indicator" id="stepInd-4">
           <span class="step-num">4</span>
-          <span>AI Screening</span>
+          <span>AI Inference</span>
+        </div>
+        <div class="step-separator"></div>
+        <div class="step-indicator" id="stepInd-5">
+          <span class="step-num">5</span>
+          <span>Screening Results</span>
         </div>
       </div>
 
@@ -389,20 +394,23 @@ function createUploadModalDom() {
           </div>
         </div>
 
-        <!-- STEP 4: AI ANOMALY DETECTION & RESULTS -->
+        <!-- STEP 4: AI INFERENCE PROGRESS -->
         <div id="uploadStepView-4" style="display:none;">
-          <div id="processingStageBox" style="text-align: center; padding: 28px 14px;">
-            <div style="font-size: 15px; font-weight: 800; color: var(--text-main);">Running Aerospace Anomaly Detection Pipeline</div>
-            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Executing feature engineering, Isolation Forest inference, and GPR trajectory forecasting...</div>
+          <div id="processingStageBox" style="text-align: center; padding: 36px 16px;">
+            <div style="font-size: 16px; font-weight: 800; color: var(--text-main);">Running Aerospace Anomaly Detection Pipeline</div>
+            <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 6px;">Executing feature engineering, Isolation Forest inference, and GPR trajectory forecasting...</div>
 
-            <div class="progress-bar-wrap">
+            <div class="progress-bar-wrap" style="max-width: 520px; margin: 24px auto 14px;">
               <div class="progress-bar-fill" id="procProgressBar"></div>
             </div>
             <div class="processing-stage-text" id="procStageText">Initializing Ingestion...</div>
           </div>
+        </div>
 
-          <div id="processingResultCard" style="display:none;">
-            <div style="padding: 18px 20px; background: #F0FDF4; border: 1.5px solid #86EFAC; border-radius: 10px; margin-bottom: 16px;">
+        <!-- STEP 5: SCREENING RESULTS & EXPLORATION -->
+        <div id="uploadStepView-5" style="display:none;">
+          <div id="processingResultCard">
+            <div style="padding: 16px 20px; background: #F0FDF4; border: 1.5px solid #86EFAC; border-radius: 10px; margin-bottom: 18px;">
               <div style="font-size: 15px; font-weight: 800; color: #166534; display: flex; align-items: center; gap: 8px;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                 <span>Screening Complete: Dataset Qualified</span>
@@ -429,6 +437,24 @@ function createUploadModalDom() {
               <div class="preview-stat-card" style="border-color: #FECDD3; background: #FEF2F2;">
                 <div class="preview-stat-label" style="color: #B91C1C;">Reject (Defects)</div>
                 <div class="preview-stat-val" style="color: #B91C1C;" id="resRejectCount">0</div>
+              </div>
+            </div>
+
+            <!-- Direct Table / Dashboard Launch Banner -->
+            <div style="margin-top: 20px; padding: 14px 18px; background: #F8FAFC; border: 1px solid var(--border-color); border-radius: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+              <div>
+                <div style="font-size: 13px; font-weight: 700; color: var(--text-main);">Launch Qualified Workspace</div>
+                <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">Inspect individual parts with TreeSHAP explanations or review fleet KPIs.</div>
+              </div>
+              <div style="display: flex; gap: 10px;">
+                <button class="btn-action-light" onclick="applyUploadedDatasetToDashboard('overview')">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                  <span>Overview KPIs</span>
+                </button>
+                <button class="btn-action-primary" style="background: #0F766E; border-color: #0F766E;" onclick="applyUploadedDatasetToDashboard('screening')">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span>Explore in Batch Screening Workspace &rarr;</span>
+                </button>
               </div>
             </div>
           </div>
@@ -728,14 +754,18 @@ function executeUploadPipelineProcess() {
     uploadState.processData = data;
 
     setTimeout(() => {
-      document.getElementById('processingStageBox').style.display = 'none';
-      document.getElementById('processingResultCard').style.display = 'block';
-      document.getElementById('btnApplyDataset').style.display = 'inline-flex';
+      setUploadWizardStep(5);
+      const btnApply = document.getElementById('btnApplyDataset');
+      if (btnApply) btnApply.style.display = 'inline-flex';
 
-      document.getElementById('resTotalScreened').innerText = String(data.total_screened);
-      document.getElementById('resPassCount').innerText = String(data.pass_count);
-      document.getElementById('resReviewCount').innerText = String(data.review_count);
-      document.getElementById('resRejectCount').innerText = String(data.reject_count);
+      const totalEl = document.getElementById('resTotalScreened');
+      const passEl = document.getElementById('resPassCount');
+      const revEl = document.getElementById('resReviewCount');
+      const rejEl = document.getElementById('resRejectCount');
+      if (totalEl) totalEl.innerText = String(data.total_screened || 0);
+      if (passEl) passEl.innerText = String(data.pass_count || 0);
+      if (revEl) revEl.innerText = String(data.review_count || 0);
+      if (rejEl) rejEl.innerText = String(data.reject_count || 0);
     }, 600);
   })
   .catch(err => {
@@ -746,7 +776,7 @@ function executeUploadPipelineProcess() {
 }
 
 // Apply Processed Dataset to Dashboard Workspace
-function applyUploadedDatasetToDashboard() {
+function applyUploadedDatasetToDashboard(targetPage) {
   if (!uploadState.processData) return;
 
   setCustomUploadedDataset(uploadState.processData);
@@ -754,6 +784,14 @@ function applyUploadedDatasetToDashboard() {
   closeUploadModal();
 
   showToast(`Active dataset switched to '${uploadState.processData.dataset_name}'. Workspace updated!`);
+
+  if (targetPage === 'screening' && !window.location.pathname.endsWith('screening.html')) {
+    window.location.href = 'screening.html';
+    return;
+  } else if (targetPage === 'overview' && !window.location.pathname.endsWith('overview.html') && !window.location.pathname.endsWith('/') && !window.location.pathname.endsWith('index.html')) {
+    window.location.href = 'overview.html';
+    return;
+  }
 
   // Refresh page if current page has specific render function
   if (typeof handleDatasetSwitch === 'function') {

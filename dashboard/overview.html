@@ -365,8 +365,33 @@
       <!-- Main Overview Canvas -->
       <main class="dashboard-container">
         
+        <!-- Mission Briefing Banner (SIH Executive Summary) -->
+        <div class="mission-briefing-strip">
+          <div class="briefing-left">
+            <div class="briefing-icon-badge">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <path d="m9 12 2 2 4-4"></path>
+              </svg>
+            </div>
+            <div class="briefing-texts">
+              <div class="briefing-title">
+                <span>Executive Mission Briefing &bull; ISRO PS26170 QA Intelligence</span>
+              </div>
+              <div class="briefing-desc">
+                Autonomous unsupervised anomaly screening &amp; GPR trajectory forecasting for satellite components under severe thermal burn-in stress.
+              </div>
+            </div>
+          </div>
+          <div class="briefing-right-tags">
+            <span class="briefing-tag success">✓ 96.23% DEFECT RECALL</span>
+            <span class="briefing-tag accent">0.00% LABEL LEAKAGE</span>
+            <span class="briefing-tag" style="background:#F1F5F9; border:1px solid #CBD5E1; color:#334155;">12/12 GATES PASSED</span>
+          </div>
+        </div>
+
         <!-- -------------------------------------------------------------
-             1. KEY KPIS (ONLY SUMMARY HIGH-LEVEL METRICS)
+             1. KEY KPIS (WITH PLAIN-ENGLISH AEROSPACE CONTEXT)
              ------------------------------------------------------------- -->
         <section class="kpi-grid">
           <!-- 1. Screened Materials -->
@@ -382,6 +407,7 @@
               <span class="kpi-badge info" id="kpi1Badge">Total MaterialIDs evaluated</span>
               <span class="kpi-context" id="kpi1Context">100% Gated Lot Qualification</span>
             </div>
+            <div class="kpi-meaning-hint">Total discrete semiconductor materials tracked across 0h to 168h checkpoints.</div>
           </div>
 
           <!-- 2. Defect Catch Rate (Recall) -->
@@ -397,6 +423,7 @@
               <span class="kpi-badge success" id="kpi2Badge">&uarr; 51/53 Defective Caught</span>
               <span class="kpi-context" id="kpi2Context">Aerospace Recall Benchmark</span>
             </div>
+            <div class="kpi-meaning-hint">Intercepted 51/53 failing parts. In spaceflight QA, missed latent defects lead to mission loss.</div>
           </div>
 
           <!-- 3. Generalization Accuracy -->
@@ -412,6 +439,7 @@
               <span class="kpi-badge info" id="kpi3Badge">Zero Label Leakage</span>
               <span class="kpi-context" id="kpi3Context">Out-of-Sample Test Holdout</span>
             </div>
+            <div class="kpi-meaning-hint">Evaluated on out-of-sample holdout batches with strictly zero training label leakage.</div>
           </div>
 
           <!-- 4. False Negative Rate -->
@@ -427,6 +455,7 @@
               <span class="kpi-badge safety" id="kpi4Badge">Only 2 missed defects</span>
               <span class="kpi-context" id="kpi4Context">Aerospace Safety Target &lt; 5%</span>
             </div>
+            <div class="kpi-meaning-hint">Critical safety ceiling: only 2 missed defects (3.77% FNR), well below the strict 5.0% target.</div>
           </div>
         </section>
 
