@@ -454,22 +454,22 @@
         <div class="mission-briefing-strip">
           <div class="briefing-left">
             <div class="briefing-icon-badge">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                 <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
               </svg>
             </div>
             <div class="briefing-texts">
               <div class="briefing-title">
-                <span>FROZEN ISOLATION FOREST &bull; COMPREHENSIVE PERFORMANCE VERIFICATION</span>
+                <span>Model Diagnostics &amp; Validation Suite</span>
               </div>
               <div class="briefing-desc">
-                Deterministic mathematical model diagnostics, boundary sensitivity calibration, and SHAP feature attribution on holdout test benchmarks.
+                Holdout test verification, sensitivity threshold calibration, and TreeSHAP attribution.
               </div>
             </div>
           </div>
           <div class="briefing-right-tags">
-            <span class="briefing-tag success">✓ 96.23% DEFECT RECALL</span>
-            <span class="briefing-tag accent">0.00% LABEL LEAKAGE</span>
+            <span class="briefing-tag success">✓ 96.2% RECALL</span>
+            <span class="briefing-tag accent">0.00% LEAKAGE</span>
             <span class="briefing-tag" style="background:#F1F5F9; border:1px solid #CBD5E1; color:#334155;">12/12 GATES PASSED</span>
           </div>
         </div>
@@ -479,51 +479,45 @@
              ------------------------------------------------------------- -->
         <section class="metrics-bar-grid">
           <!-- Accuracy -->
-          <div class="metric-strip-card">
+          <div class="metric-strip-card" title="Evaluated on out-of-sample holdout test components with strictly zero training leakage">
             <span class="metric-strip-label">Accuracy</span>
             <span class="metric-strip-val" id="stripAccuracy" style="color: var(--brand-cobalt);">89.08%</span>
-            <span class="metric-strip-sub">Zero label leakage holdout</span>
-            <div class="kpi-meaning-hint">Evaluated on out-of-sample holdout test components with strictly zero training leakage.</div>
+            <span class="metric-strip-sub">Zero leakage holdout</span>
           </div>
 
           <!-- Recall / Sensitivity -->
-          <div class="metric-strip-card">
+          <div class="metric-strip-card" title="High-consequence safety benchmark: successfully intercepted 51 of 53 defective units">
             <span class="metric-strip-label">Recall / Sensitivity</span>
             <span class="metric-strip-val" id="stripRecall" style="color: #059669;">96.23%</span>
             <span class="metric-strip-sub">51 / 53 defects caught</span>
-            <div class="kpi-meaning-hint">High-consequence safety benchmark: successfully intercepted 51 of 53 defective units.</div>
           </div>
 
           <!-- Specificity -->
-          <div class="metric-strip-card">
+          <div class="metric-strip-card" title="104 of 121 nominal flight parts correctly cleared without redundant engineering review">
             <span class="metric-strip-label">Specificity</span>
             <span class="metric-strip-val" id="stripSpecificity" style="color: #0F766E;">85.95%</span>
             <span class="metric-strip-sub">104 / 121 nominals cleared</span>
-            <div class="kpi-meaning-hint">104 of 121 nominal flight parts correctly cleared without redundant engineering review.</div>
           </div>
 
           <!-- Precision -->
-          <div class="metric-strip-card">
+          <div class="metric-strip-card" title="Purity of flagged components; borderline parts safely escalated for physical microscopy">
             <span class="metric-strip-label">Precision</span>
             <span class="metric-strip-val" id="stripPrecision" style="color: #2563EB;">75.00%</span>
             <span class="metric-strip-sub">Flagged defect purity</span>
-            <div class="kpi-meaning-hint">Purity of flagged components; borderline parts safely escalated for physical microscopy.</div>
           </div>
 
           <!-- F1 Score -->
-          <div class="metric-strip-card">
+          <div class="metric-strip-card" title="Harmonic balance between recall coverage and precision purity across imbalanced classes">
             <span class="metric-strip-label">F1-Score</span>
             <span class="metric-strip-val" id="stripF1" style="color: #7C3AED;">0.843</span>
-            <span class="metric-strip-sub">Harmonic mean balance</span>
-            <div class="kpi-meaning-hint">Harmonic balance between recall coverage and precision purity across imbalanced classes.</div>
+            <span class="metric-strip-sub">Harmonic balance</span>
           </div>
 
           <!-- False Negative Rate -->
-          <div class="metric-strip-card">
+          <div class="metric-strip-card" title="Critical aerospace safety ceiling: only 2 missed defects (3.77%), well below 5.0% target">
             <span class="metric-strip-label">Safety Alert (FNR)</span>
             <span class="metric-strip-val" id="stripFnr" style="color: #DC2626;">3.77%</span>
             <span class="metric-strip-sub">Strict target &lt; 5.0%</span>
-            <div class="kpi-meaning-hint">Critical aerospace safety ceiling: only 2 missed defects (3.77%), well below the 5.0% limit.</div>
           </div>
         </section>
 
@@ -537,9 +531,9 @@
             <div class="card-header-bar">
               <div class="card-header-titles">
                 <h2>Confusion Matrix Visualizer</h2>
-                <p id="cmSubtitle">Frozen Test Set Performance &bull; 174 Out-of-Sample Materials</p>
+                <p id="cmSubtitle">Frozen Test Set &bull; 174 Out-of-Sample Materials</p>
               </div>
-              <span class="tag-mono" id="cmModelTag">Model: Frozen Isolation Forest v2</span>
+              <span class="tag-mono" id="cmModelTag">Frozen Isolation Forest v2</span>
             </div>
 
             <div class="cm-wrapper">
@@ -551,7 +545,7 @@
                     <span style="font-family: var(--font-mono); font-size: 10px;">SPECIFICITY</span>
                   </div>
                   <div class="cm-cell-value" id="cmTN">104</div>
-                  <div class="cm-cell-desc">Nominal parts cleared for flight acceptance with 0% risk.</div>
+                  <div class="cm-cell-desc">104 parts cleared for flight acceptance</div>
                 </div>
 
                 <!-- False Positive (FP) -->
@@ -561,7 +555,7 @@
                     <span style="font-family: var(--font-mono); font-size: 10px;">OVERKILL</span>
                   </div>
                   <div class="cm-cell-value" id="cmFP">17</div>
-                  <div class="cm-cell-desc">Escalated to engineering review; safe non-catastrophic margin.</div>
+                  <div class="cm-cell-desc">17 flagged for secondary QA review</div>
                 </div>
 
                 <!-- False Negative (FN) -->
@@ -571,7 +565,7 @@
                     <span style="font-family: var(--font-mono); font-size: 10px;">SAFETY ALERT</span>
                   </div>
                   <div class="cm-cell-value" id="cmFN">2</div>
-                  <div class="cm-cell-desc">Only 2 missed defects across 174 parts (3.77% safety score).</div>
+                  <div class="cm-cell-desc">2 missed (3.77% safety score, target &lt; 5%)</div>
                 </div>
 
                 <!-- True Positive (TP) -->
@@ -581,7 +575,7 @@
                     <span style="font-family: var(--font-mono); font-size: 10px;">RECALL</span>
                   </div>
                   <div class="cm-cell-value" id="cmTP">51</div>
-                  <div class="cm-cell-desc">Defects intercepted before qualification testing.</div>
+                  <div class="cm-cell-desc">51 defects intercepted before testing</div>
                 </div>
               </div>
 
@@ -605,21 +599,19 @@
                 </div>
               </div>
 
-              <!-- Educational Judge's Guide Callout -->
-              <div class="judge-guide-callout" style="margin-top: 6px;">
-                <div class="judge-guide-icon">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                </div>
-                <div class="judge-guide-content">
-                  <h4>Judge's Guide to Aerospace Quality Assurance</h4>
-                  <p>In aerospace satellite qualification, false negatives cause catastrophic hardware loss in orbit. The Isolation Forest model is strictly calibrated to prioritize <strong>Defect Recall (&ge; 95%)</strong> and minimize <strong>False Negative Rate (&lt; 5%)</strong> over raw accuracy, intentionally accepting controlled engineering review for borderline components.</p>
-                  <div class="sub-bullets">
-                    <span class="judge-guide-pill">Safety Criterion: FNR &lt; 5% (Actual: 3.77%)</span>
-                    <span class="judge-guide-pill">Recall Target: &ge; 95% (Actual: 96.23%)</span>
-                    <span class="judge-guide-pill">Zero Training Label Leakage</span>
+              <!-- Expandable Aerospace Philosophy Accordion -->
+              <details class="judge-guide-accordion">
+                <summary class="judge-guide-summary">
+                  <div class="judge-guide-summary-left">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    <span>Aerospace QA Standard: Recall &ge; 95% &bull; FNR &lt; 5%</span>
                   </div>
+                  <span class="accordion-arrow">Why Recall &gt; Accuracy &darr;</span>
+                </summary>
+                <div class="judge-guide-body">
+                  In spaceflight qualification, missed defects (false negatives) cause catastrophic hardware loss in orbit. The model strictly prioritizes catching defects (Recall 96.23%, FNR 3.77%) over raw accuracy, tolerating controlled secondary review for borderline components.
                 </div>
-              </div>
+              </details>
             </div>
           </div>
 
@@ -652,8 +644,8 @@
                 </button>
               </div>
 
-              <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 12px; line-height: 1.4;">
-                The vertical dashed marker represents the frozen discrimination threshold <strong>&tau; = 0.393578</strong>. Components to the right of &tau; are classified as anomalies and flagged for review or rejection.
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 10px;">
+                Components to the right of &tau; (0.3936) exceed the safety envelope and are flagged for review/rejection.
               </div>
             </div>
           </div>
@@ -665,8 +657,8 @@
         <section class="surface-card">
           <div class="card-header-bar">
             <div class="card-header-titles">
-              <h2>Global Feature Importance Ranking (TreeSHAP Attribution)</h2>
-              <p>Top physical sensors and engineered degradation indicators driving Isolation Forest anomaly splits</p>
+              <h2>Feature Importance (TreeSHAP Attribution)</h2>
+              <p>Key physical sensors and degradation indicators driving anomaly splits</p>
             </div>
             <span class="tag-mono">156 High-Dimensional Features Screened</span>
           </div>

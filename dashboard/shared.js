@@ -381,26 +381,26 @@ function createUploadModalDom() {
         <!-- STEP 3: PRE-FLIGHT QUALITY GATE -->
         <div id="uploadStepView-3" style="display:none;">
           <div style="font-size: 14px; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">12-Check Pre-Flight Quality Gate</div>
-          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">
-            Validating schema conformity, timestamp monotonicity, and finite sensor ranges.
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">
+            Verifying schema conformity, timestamp monotonicity, and sensor limits.
           </div>
 
           <div class="validation-checks-list" id="validationChecksDom">
             <!-- Dynamic checks rendered -->
           </div>
 
-          <div style="margin-top: 16px; padding: 12px 16px; background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 8px; font-size: 12px; color: #065F46;" id="validationSummaryBanner">
-            <strong>Ready for Screening:</strong> Data passed ingestion quality checks and is fully compatible with the Isolation Forest model.
+          <div style="margin-top: 14px; padding: 10px 14px; background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 8px; font-size: 12px; color: #065F46;" id="validationSummaryBanner">
+            <strong>Ready:</strong> Data passed 12/12 quality checks and is compatible for screening.
           </div>
         </div>
 
         <!-- STEP 4: AI INFERENCE PROGRESS -->
         <div id="uploadStepView-4" style="display:none;">
-          <div id="processingStageBox" style="text-align: center; padding: 36px 16px;">
-            <div style="font-size: 16px; font-weight: 800; color: var(--text-main);">Running Aerospace Anomaly Detection Pipeline</div>
-            <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 6px;">Executing feature engineering, Isolation Forest inference, and GPR trajectory forecasting...</div>
+          <div id="processingStageBox" style="text-align: center; padding: 32px 16px;">
+            <div style="font-size: 15px; font-weight: 800; color: var(--text-main);">Running Anomaly Detection Pipeline</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Extracting behavioral features and calculating anomaly scores...</div>
 
-            <div class="progress-bar-wrap" style="max-width: 520px; margin: 24px auto 14px;">
+            <div class="progress-bar-wrap" style="max-width: 480px; margin: 20px auto 12px;">
               <div class="progress-bar-fill" id="procProgressBar"></div>
             </div>
             <div class="processing-stage-text" id="procStageText">Initializing Ingestion...</div>
@@ -410,13 +410,13 @@ function createUploadModalDom() {
         <!-- STEP 5: SCREENING RESULTS & EXPLORATION -->
         <div id="uploadStepView-5" style="display:none;">
           <div id="processingResultCard">
-            <div style="padding: 16px 20px; background: #F0FDF4; border: 1.5px solid #86EFAC; border-radius: 10px; margin-bottom: 18px;">
-              <div style="font-size: 15px; font-weight: 800; color: #166534; display: flex; align-items: center; gap: 8px;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <div style="padding: 14px 18px; background: #F0FDF4; border: 1.5px solid #86EFAC; border-radius: 10px; margin-bottom: 16px;">
+              <div style="font-size: 14px; font-weight: 800; color: #166534; display: flex; align-items: center; gap: 8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                 <span>Screening Complete: Dataset Qualified</span>
               </div>
-              <div style="font-size: 12.5px; color: #14532D; margin-top: 6px;" id="uploadResultNarrative">
-                Successfully processed components with complete audit trail recorded to SQLite.
+              <div style="font-size: 12px; color: #14532D; margin-top: 4px;" id="uploadResultNarrative">
+                All components evaluated with complete audit trail recorded.
               </div>
             </div>
 

@@ -684,16 +684,16 @@
         <div class="mission-briefing-strip">
           <div class="briefing-left">
             <div class="briefing-icon-badge">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                 <circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>
               </svg>
             </div>
             <div class="briefing-texts">
               <div class="briefing-title">
-                <span>COMPONENT COMPLIANCE INSPECTION &bull; FLIGHT QUALIFICATION WORKSPACE</span>
+                <span>Batch Component Screening Workspace</span>
               </div>
               <div class="briefing-desc">
-                Individual semiconductor telemetry evaluation, deterministic anomaly scoring, 12-check flight gate compliance, and auditable human QA sign-off.
+                Component-level anomaly scoring, 12-check quality gate status, and auditable QA sign-off.
               </div>
             </div>
           </div>
@@ -715,7 +715,7 @@
                 <span>FABRICATION BATCH INTELLIGENCE</span>
               </div>
               <h2 class="lot-card-h2">Fabrication Lot Screening &amp; Anomaly Dispersion</h2>
-              <p class="lot-card-p">Lot-by-lot yield distribution &amp; defect concentration across semiconductor cohorts (Pass vs. Review vs. Reject)</p>
+              <p class="lot-card-p">Yield &amp; defect counts across semiconductor fabrication cohorts</p>
             </div>
 
             <div class="lot-card-controls">
@@ -903,10 +903,10 @@
         <div class="narrative-callout">
           <div class="narrative-callout-header">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            <span>DETERMINISTIC MODEL EXPLANATION &bull; AUDITABLE NARRATIVE</span>
+            <span>AI FINDING &bull; AUDIT TRAIL EXPLANATION</span>
           </div>
           <div class="narrative-callout-text" id="inspNarrativeText">
-            MaterialID M053 exhibited elevated drift (+3.1&sigma;) and excessive isolation score (0.8164) beyond safety envelope. Data quality passed 12/12 gates. Conservative disposition: REJECT.
+            MaterialID M053: drift (+3.1&sigma;) and anomaly score (0.816) exceed envelope. Passed 12/12 quality gates. Recommendation: REJECT.
           </div>
         </div>
 
@@ -929,7 +929,7 @@
         <div class="qa-signoff-form">
           <h4 style="font-size: 13px; font-weight: 700; color: #1E293B; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-            <span>Aerospace QA Inspector Authorization &bull; Audit Trail Sign-off</span>
+            <span>QA Inspector Authorization &bull; Audit Trail Sign-off</span>
           </h4>
 
           <div class="qa-form-row">
@@ -1221,7 +1221,7 @@
 
       // Narrative Plain-English Text
       document.getElementById('inspNarrativeText').innerText = component.reason || 
-        `MaterialID ${component.id} exhibited elevated drift (+${component.peer_z || 3.1}\u03C3) and excessive isolation score (${Number(component.score || 0.8164).toFixed(4)}) beyond safety envelope. Data quality passed 12/12 gates. Conservative disposition: ${component.disposition}.`;
+        `${component.id}: drift (+${component.peer_z || 3.1}\u03C3) & anomaly score (${Number(component.score || 0.8164).toFixed(3)}) exceed envelope. Passed 12/12 gates. Recommended: ${component.disposition}.`;
 
       // Render Trajectory SVG Chart
       renderTrajectoryChart(component);
