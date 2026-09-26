@@ -72,6 +72,13 @@
   padding: 0;
 }
 
+html, body {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 body {
   font-family: var(--font-sans);
   background-color: var(--bg-canvas);
@@ -96,6 +103,10 @@ a {
   display: flex;
   min-height: 100vh;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  position: relative;
 }
 
 /* Fixed Left Sidebar */
@@ -111,6 +122,7 @@ a {
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
 }
 
 .sidebar-header {
@@ -275,11 +287,14 @@ a {
    MAIN WORKSPACE WRAPPER
    ------------------------------------------------------------- */
 .app-main-wrapper {
-  flex: 1;
+  flex: 1 1 0%;
   margin-left: var(--sidebar-width);
+  width: calc(100% - var(--sidebar-width));
+  max-width: calc(100% - var(--sidebar-width));
   min-width: 0;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 }
 
 /* Persistent Clean Header Across Pages (Compact Modern Workspace) */
@@ -291,6 +306,10 @@ a {
   position: sticky;
   top: 0;
   z-index: 40;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .header-top-row {
@@ -299,12 +318,16 @@ a {
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .brand-cluster {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .brand-logo-badge {
@@ -322,6 +345,7 @@ a {
 .brand-titles {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .brand-eyebrow {
@@ -353,6 +377,8 @@ a {
   border-radius: 8px;
   border: 1px solid var(--border-color);
   gap: 2px;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .dataset-pill {
@@ -405,6 +431,9 @@ a {
   border-top: 1px solid var(--border-subtle);
   flex-wrap: wrap;
   gap: 10px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .run-status-pill,
@@ -421,6 +450,11 @@ a {
   padding: 4px 12px;
   border-radius: 6px;
   line-height: 1.4;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .telemetry-badge-text {
@@ -579,14 +613,18 @@ a {
   gap: 12px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
   flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .briefing-left {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex: 1;
-  min-width: 260px;
+  flex: 1 1 240px;
+  min-width: 0;
 }
 
 .briefing-icon-badge {
@@ -605,6 +643,7 @@ a {
   display: flex;
   flex-direction: column;
   gap: 1px;
+  min-width: 0;
 }
 
 .briefing-title {
@@ -1072,9 +1111,11 @@ a {
 
 /* Main Scrollable Canvas */
 .dashboard-container {
-  padding: 28px 32px 60px;
-  max-width: 1600px;
+  padding: 24px 28px 60px;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 /* -------------------------------------------------------------
@@ -1082,9 +1123,13 @@ a {
    ------------------------------------------------------------- */
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
   margin-bottom: 20px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .kpi-card {
@@ -1097,6 +1142,11 @@ a {
   flex-direction: column;
   justify-content: space-between;
   transition: var(--transition);
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .kpi-card:hover {
@@ -1109,6 +1159,9 @@ a {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 8px;
+  min-width: 0;
+  width: 100%;
+  gap: 8px;
 }
 
 .kpi-title {
@@ -1120,6 +1173,15 @@ a {
   display: flex;
   align-items: center;
   gap: 5px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.kpi-title span:first-child {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .kpi-icon-wrap {
@@ -1141,6 +1203,10 @@ a {
   line-height: 1.1;
   letter-spacing: -0.02em;
   margin-bottom: 6px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .kpi-context-line {
@@ -1151,9 +1217,17 @@ a {
   display: flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.kpi-context-line span:not(.kpi-badge) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
 }
 
 .kpi-footer {
@@ -1162,6 +1236,7 @@ a {
   gap: 6px;
   border-top: none;
   padding-top: 0;
+  min-width: 0;
 }
 
 .kpi-badge {
@@ -1206,6 +1281,10 @@ a {
   padding: 24px;
   box-shadow: var(--shadow-card);
   margin-bottom: 24px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .card-header-bar {
@@ -1215,6 +1294,13 @@ a {
   margin-bottom: 20px;
   flex-wrap: wrap;
   gap: 12px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.card-header-titles {
+  min-width: 0;
 }
 
 .card-header-titles h2 {
@@ -1739,9 +1825,9 @@ a {
 /* -------------------------------------------------------------
    RESPONSIVE DESIGN (DESKTOP / TABLET / MOBILE)
    ------------------------------------------------------------- */
-@media (max-width: 1200px) {
+@media (max-width: 1280px) {
   .kpi-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1755,9 +1841,11 @@ a {
   }
   .app-main-wrapper {
     margin-left: 0;
+    width: 100%;
+    max-width: 100%;
   }
   .kpi-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .header-top-row {
     flex-direction: column;

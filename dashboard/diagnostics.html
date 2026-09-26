@@ -15,9 +15,12 @@
     /* Specific styles for Model Diagnostics Page */
     .metrics-bar-grid {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
+      grid-template-columns: repeat(6, minmax(0, 1fr));
       gap: 14px;
       margin-bottom: 24px;
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
     }
 
     .metric-strip-card {
@@ -29,6 +32,9 @@
       display: flex;
       flex-direction: column;
       gap: 4px;
+      min-width: 0;
+      overflow: hidden;
+      box-sizing: border-box;
     }
 
     .metric-strip-label {
@@ -37,6 +43,10 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
     }
 
     .metric-strip-val {
@@ -44,19 +54,30 @@
       font-size: 22px;
       font-weight: 800;
       color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
     }
 
     .metric-strip-sub {
       font-size: 10.5px;
       color: var(--text-subtle);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
     }
 
     /* Diagnostics 2-Col Grid */
     .diag-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 24px;
       margin-bottom: 24px;
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
     }
 
     /* Confusion Matrix Visualizer */
@@ -267,12 +288,15 @@
       flex-shrink: 0;
     }
 
-    @media (max-width: 1100px) {
+    @media (max-width: 1280px) {
       .metrics-bar-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
+    }
+
+    @media (max-width: 1100px) {
       .diag-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
       }
       .shap-feat-desc {
         display: none;
@@ -281,7 +305,7 @@
 
     @media (max-width: 640px) {
       .metrics-bar-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
       .shap-feat-name {
         width: 130px;

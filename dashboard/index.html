@@ -15,16 +15,23 @@
     /* Specific styles for Overview Page */
     .overview-hero-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 24px;
       margin-bottom: 24px;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
     }
 
     .status-donut-wrap {
       display: flex;
       align-items: center;
-      gap: 28px;
+      gap: 24px;
       padding: 10px 0;
+      width: 100%;
+      min-width: 0;
+      flex-wrap: wrap;
     }
 
     .donut-svg-container {
@@ -35,7 +42,8 @@
     }
 
     .donut-legend {
-      flex: 1;
+      flex: 1 1 200px;
+      min-width: 0;
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -94,8 +102,11 @@
     /* Gate Health Grid */
     .gate-health-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 12px;
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
     }
 
     .gate-health-item {
@@ -106,38 +117,54 @@
       display: flex;
       flex-direction: column;
       gap: 4px;
+      min-width: 0;
+      box-sizing: border-box;
     }
 
     .gate-health-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 6px;
+      min-width: 0;
     }
 
     .gate-health-title {
       font-size: 12px;
       font-weight: 700;
       color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
     }
 
     .gate-health-desc {
       font-size: 11px;
       color: var(--text-muted);
+      line-height: 1.35;
+      min-width: 0;
     }
 
     /* Lot Bar Graph Container */
     .lot-chart-container {
       width: 100%;
+      max-width: 100%;
       height: 220px;
       margin-top: 10px;
+      overflow: hidden;
+      box-sizing: border-box;
     }
 
     /* Action Cards Gateway */
     .gateway-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 20px;
       margin-top: 24px;
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
     }
 
     .gateway-card {
@@ -152,12 +179,18 @@
       cursor: pointer;
       transition: var(--transition);
       text-decoration: none;
+      min-width: 0;
+      box-sizing: border-box;
     }
 
     .gateway-card:hover {
       border-color: var(--brand-teal);
       box-shadow: var(--shadow-lg);
       transform: translateY(-2px);
+    }
+
+    .gateway-content {
+      min-width: 0;
     }
 
     .gateway-content h3 {
@@ -167,12 +200,14 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      min-width: 0;
     }
 
     .gateway-content p {
       font-size: 12.5px;
       color: var(--text-muted);
       margin-top: 4px;
+      min-width: 0;
     }
 
     .gateway-arrow {
@@ -193,12 +228,21 @@
       transform: translateX(4px);
     }
 
+    @media (max-width: 1200px) {
+      .gate-health-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
     @media (max-width: 1024px) {
       .overview-hero-grid, .gateway-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
       }
+    }
+
+    @media (max-width: 640px) {
       .gate-health-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: minmax(0, 1fr);
       }
     }
   </style>
