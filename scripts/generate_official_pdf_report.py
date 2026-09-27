@@ -32,7 +32,7 @@ class NumberedCanvas(canvas.Canvas):
         self.setFillColor(colors.HexColor("#0B2545"))
         # Header (pages > 1)
         if self._pageNumber > 1:
-            self.drawString(54, 755, "SIH26170: AI-Driven Anomaly Detection in Component Burn-In & Screening")
+            self.drawString(54, 755, "Screening AI: AI-Driven Anomaly Detection in Component Burn-In & Screening")
             self.drawRightString(612 - 54, 755, "ISRO Reliability & QA Engineering Baseline")
             self.setStrokeColor(colors.HexColor("#CBD5E1"))
             self.setLineWidth(0.75)
@@ -41,7 +41,7 @@ class NumberedCanvas(canvas.Canvas):
         # Footer
         self.setFont("Helvetica", 8)
         self.setFillColor(colors.HexColor("#64748B"))
-        self.drawString(54, 38, "CONFIDENTIAL & AUDITABLE — ISRO Smart Automation — Theme: Software")
+        self.drawString(54, 38, "CONFIDENTIAL & AUDITABLE — Screening AI • ISRO Smart Automation — Theme: Software")
         page_text = f"Page {self._pageNumber} of {page_count}"
         self.drawRightString(612 - 54, 38, page_text)
         self.setStrokeColor(colors.HexColor("#CBD5E1"))
@@ -49,7 +49,10 @@ class NumberedCanvas(canvas.Canvas):
         self.line(54, 48, 612 - 54, 48)
         self.restoreState()
 
-def build_pdf(filename="SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf"):
+def build_pdf(filename="docs/SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf"):
+    out_dir = os.path.dirname(os.path.abspath(filename))
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
     doc = SimpleDocTemplate(
         filename,
         pagesize=letter,
@@ -155,10 +158,54 @@ def build_pdf(filename="SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf"):
 
     story = []
 
-    # Title block
-    story.append(Paragraph("INDIAN SPACE RESEARCH ORGANISATION (ISRO)", ParagraphStyle('TopOrg', fontName='Helvetica-Bold', fontSize=9, textColor=c_teal, spaceAfter=2)))
-    story.append(Paragraph("SIH26170: AI-Driven Anomaly Detection in Component Burn-In & Screening", title_style))
-    story.append(Paragraph("Comprehensive Model Training, Evaluation & Verification Audit Report", subtitle_style))
+    # Title block with official ISRO logo
+    logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dashboard", "assets", "isro_logo.png")
+    if not os.path.exists(logo_path):
+        logo_path = os.path.abspath("dashboard/assets/isro_logo.png")
+
+    top_org_style = ParagraphStyle('TopOrg', fontName='Helvetica-Bold', fontSize=9, textColor=c_teal, spaceAfter=2)
+    custom_title_style = ParagraphStyle(
+        'DocTitleScreening',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=17,
+        leading=21,
+        textColor=c_primary,
+        spaceAfter=3
+    )
+    custom_subtitle_style = ParagraphStyle(
+        'DocSubtitleScreening',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=10,
+        leading=13,
+        textColor=c_teal,
+        spaceAfter=0
+    )
+
+    if os.path.exists(logo_path):
+        title_flowables = [
+            Paragraph("INDIAN SPACE RESEARCH ORGANISATION (ISRO)", top_org_style),
+            Paragraph("SCREENING AI: AI-Driven Anomaly Detection in Component Burn-In & Screening", custom_title_style),
+            Paragraph("Comprehensive Model Training, Evaluation & Verification Audit Report", custom_subtitle_style)
+        ]
+        logo_img = Image(logo_path, width=52, height=52)
+        header_table = Table([[title_flowables, logo_img]], colWidths=[444, 60])
+        header_table.setStyle(TableStyle([
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('ALIGN', (1,0), (1,0), 'RIGHT'),
+            ('LEFTPADDING', (0,0), (-1,-1), 0),
+            ('RIGHTPADDING', (0,0), (-1,-1), 0),
+            ('TOPPADDING', (0,0), (-1,-1), 0),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+        ]))
+        story.append(header_table)
+    else:
+        story.append(Paragraph("INDIAN SPACE RESEARCH ORGANISATION (ISRO)", top_org_style))
+        story.append(Paragraph("SCREENING AI: AI-Driven Anomaly Detection in Component Burn-In & Screening", custom_title_style))
+        story.append(Paragraph("Comprehensive Model Training, Evaluation & Verification Audit Report", custom_subtitle_style))
+
+    story.append(Spacer(1, 4))
     story.append(HRFlowable(width="100%", thickness=1.5, color=c_primary, spaceBefore=0, spaceAfter=8))
 
     # Meta banner table
@@ -193,7 +240,7 @@ def build_pdf(filename="SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf"):
         "Standard aerospace screening checks whether electrical measurements remain within static limit lines. "
         "However, latent physical degradation (gate oxide TDDB, electromigration, package thermal wear) frequently manifests "
         "as <b>anomalous trajectory drift over time</b> while remaining fully within absolute specification boundaries. "
-        "SIH26170 solves this through a dual-module AI layer: <b>Module A (Unsupervised Isolation Forest with TreeSHAP)</b> "
+        "Screening AI solves this through a dual-module AI layer: <b>Module A (Unsupervised Isolation Forest with TreeSHAP)</b> "
         "detects current anomalies relative to dynamic peer cohorts, and <b>Module B (Gaussian Process Regression)</b> forecasts "
         "future 168-hour parameter drift with calibrated ±2σ uncertainty cones using only early (≤24h) telemetry.",
         body_style
@@ -480,6 +527,12 @@ def build_pdf(filename="SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf"):
 
     doc.build(story, canvasmaker=NumberedCanvas)
     print(f"Successfully generated PDF: {filename} ({os.path.getsize(filename)/1024:.1f} KB)")
+    
+    root_copy = "SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf"
+    if os.path.abspath(filename) != os.path.abspath(root_copy):
+        import shutil
+        shutil.copyfile(filename, root_copy)
+        print(f"Synchronized root copy: {root_copy} ({os.path.getsize(root_copy)/1024:.1f} KB)")
 
 if __name__ == '__main__':
     build_pdf()

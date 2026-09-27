@@ -134,15 +134,23 @@ a {
 }
 
 .sidebar-logo-badge {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--brand-teal), var(--brand-cobalt));
-  display: grid;
-  place-items: center;
-  color: #FFFFFF;
-  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.25);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.sidebar-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .sidebar-brand-text {
@@ -297,12 +305,12 @@ a {
   box-sizing: border-box;
 }
 
-/* Persistent Clean Header Across Pages (Compact Modern Workspace) */
+/* Persistent Clean Header Across Pages (Compact Space-Efficient Workspace) */
 .app-workspace-header {
   background: #FFFFFF;
   border-bottom: 1px solid var(--border-color);
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
-  padding: 12px 28px 10px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  padding: 8px 24px 7px;
   position: sticky;
   top: 0;
   z-index: 40;
@@ -316,7 +324,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
   width: 100%;
   max-width: 100%;
@@ -326,20 +334,36 @@ a {
 .brand-cluster {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   min-width: 0;
 }
 
 .brand-logo-badge {
-  width: 38px;
-  height: 38px;
-  border-radius: 9px;
-  background: linear-gradient(135deg, var(--brand-teal), var(--brand-cobalt));
-  display: grid;
-  place-items: center;
-  color: white;
-  box-shadow: 0 3px 10px rgba(15, 118, 110, 0.22);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.header-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.brand-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .brand-titles {
@@ -350,158 +374,58 @@ a {
 
 .brand-eyebrow {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 700;
   color: var(--brand-teal);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
+  line-height: 1;
 }
 
 .brand-main-title {
-  font-size: 18px;
+  font-size: 15.5px;
   font-weight: 800;
   color: var(--text-main);
-  letter-spacing: -0.02em;
-  margin-top: 1px;
-}
-
-/* Dataset Switcher Pills */
-.dataset-switcher {
-  display: flex;
-  align-items: center;
-  background: #F1F5F9;
-  padding: 3px;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-  gap: 2px;
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-.dataset-pill {
-  font-family: var(--font-sans);
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--text-muted);
-  padding: 5px 12px;
-  border-radius: 6px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  margin: 0;
   white-space: nowrap;
 }
 
-.dataset-pill:hover {
-  color: var(--text-main);
-}
-
-.dataset-pill.active {
-  background: #FFFFFF;
-  color: var(--text-main);
-  font-weight: 700;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-}
-
-.dataset-pill .pill-dot {
-  width: 6.5px;
-  height: 6.5px;
-  border-radius: 50%;
-  background: #94A3B8;
-  transition: background 0.15s ease;
-}
-
-.dataset-pill.active .pill-dot {
-  background: var(--brand-teal);
-}
-
-/* Header Sub-Row (Compact Aerospace Telemetry Strip) */
-.header-sub-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid var(--border-subtle);
-  flex-wrap: wrap;
-  gap: 10px;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-}
-
-.run-status-pill,
-.run-telemetry-strip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.brand-eyebrow-tag {
   font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  color: #1E293B;
-  background: #F8FAFC;
-  border: 1px solid var(--border-color);
-  padding: 4px 12px;
-  border-radius: 6px;
-  line-height: 1.4;
-  max-width: 100%;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.telemetry-badge-text {
-  font-weight: 700;
-  color: #059669;
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.telemetry-divider {
-  color: #CBD5E1;
-  user-select: none;
-}
-
-.telemetry-label {
-  color: #64748B;
-  font-weight: 600;
-  font-size: 10.5px;
-}
-
-.tag-gate-pass {
   font-size: 10px;
   font-weight: 700;
-  color: #0F766E;
-  background: #CCFBF1;
-  padding: 1px 6px;
+  color: var(--brand-teal);
+  background: var(--brand-teal-light);
+  border: 1px solid var(--brand-teal-border);
+  padding: 1px 7px;
   border-radius: 4px;
   letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
+/* Header Action Group */
 .header-action-group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
-/* Unified Action Buttons (32px Matching Height, No Emojis, Sharp Alignment) */
+/* Unified Action Buttons (28px Compact Height) */
 .btn-hdr-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 13px;
+  gap: 5px;
+  height: 28px;
+  padding: 0 11px;
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   border-radius: 6px;
   cursor: pointer;
@@ -513,9 +437,136 @@ a {
 }
 
 .btn-hdr-action svg {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   flex-shrink: 0;
+}
+
+/* Header Sub-Row (Dataset Switcher & Telemetry Bar) */
+.header-sub-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 5px;
+  padding-top: 5px;
+  border-top: 1px solid var(--border-subtle);
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Dataset Switcher Pills */
+.dataset-switcher {
+  display: flex;
+  align-items: center;
+  background: #F1F5F9;
+  padding: 2px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  gap: 2px;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  flex-shrink: 0;
+}
+
+.dataset-switcher::-webkit-scrollbar {
+  display: none;
+}
+
+.dataset-pill {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 3px 10px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+.dataset-pill:hover {
+  color: var(--text-main);
+}
+
+.dataset-pill.active {
+  background: #FFFFFF;
+  color: var(--text-main);
+  font-weight: 700;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.dataset-pill .pill-dot {
+  width: 5.5px;
+  height: 5.5px;
+  border-radius: 50%;
+  background: #94A3B8;
+  transition: background 0.15s ease;
+}
+
+.dataset-pill.active .pill-dot {
+  background: var(--brand-teal);
+}
+
+/* Run Telemetry Strip */
+.run-status-pill,
+.run-telemetry-strip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #1E293B;
+  background: #F8FAFC;
+  border: 1px solid var(--border-color);
+  padding: 3px 10px;
+  border-radius: 5px;
+  line-height: 1.3;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.telemetry-badge-text {
+  font-weight: 700;
+  color: #059669;
+  font-size: 9.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.telemetry-divider {
+  color: #CBD5E1;
+  user-select: none;
+}
+
+.telemetry-label {
+  color: #64748B;
+  font-weight: 600;
+  font-size: 10px;
+}
+
+.tag-gate-pass {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #0F766E;
+  background: #CCFBF1;
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.03em;
 }
 
 .btn-hdr-upload {
@@ -665,13 +716,13 @@ a {
 .mission-briefing-strip {
   background: #FFFFFF;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 8px 16px;
-  margin-bottom: 16px;
+  border-radius: var(--radius-sm);
+  padding: 5px 14px;
+  margin-bottom: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
   flex-wrap: wrap;
   width: 100%;
@@ -683,15 +734,15 @@ a {
 .briefing-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex: 1 1 240px;
   min-width: 0;
 }
 
 .briefing-icon-badge {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
   background: var(--brand-teal-light);
   border: 1px solid var(--brand-teal-border);
   color: var(--brand-teal);
@@ -700,27 +751,34 @@ a {
   flex-shrink: 0;
 }
 
+.briefing-icon-badge svg {
+  width: 13px;
+  height: 13px;
+}
+
 .briefing-texts {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
+  flex-wrap: wrap;
 }
 
 .briefing-title {
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 11.5px;
+  font-weight: 700;
   color: var(--text-main);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 
 .briefing-desc {
   font-size: 11px;
   color: var(--text-muted);
-  line-height: 1.3;
+  line-height: 1.2;
 }
 
 .briefing-right-tags {
@@ -1172,7 +1230,7 @@ a {
 
 /* Main Scrollable Canvas */
 .dashboard-container {
-  padding: 24px 28px 60px;
+  padding: 12px 24px 40px;
   width: 100%;
   max-width: 100%;
   min-width: 0;
@@ -1185,8 +1243,8 @@ a {
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-  margin-bottom: 20px;
+  gap: 12px;
+  margin-bottom: 14px;
   width: 100%;
   max-width: 100%;
   min-width: 0;

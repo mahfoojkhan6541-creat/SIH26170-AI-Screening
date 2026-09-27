@@ -29,8 +29,8 @@ from src.state.progressive import ProgressiveStateManager
 from src.audit.storage import AuditStorage
 
 app = FastAPI(
-    title="SIH26170 Generalized Burn-In Data Pipeline API",
-    description="Configuration-driven, time-aware, multi-branch anomaly detection, forecasting & conservative decision API.",
+    title="Screening AI - Generalized Burn-In Data Pipeline API",
+    description="Configuration-driven, time-aware, multi-branch anomaly detection, forecasting & conservative decision API for ISRO Component Screening.",
     version="1.0.0"
 )
 
@@ -84,6 +84,14 @@ if os.path.exists("dashboard"):
     if os.path.exists("docs"):
         app.mount("/dashboard/docs", StaticFiles(directory="docs"), name="dashboard_docs")
     app.mount("/dashboard", StaticFiles(directory="dashboard", html=True), name="dashboard")
+
+@app.get("/favicon.ico", include_in_schema=False)
+def get_favicon():
+    if os.path.exists("dashboard/assets/favicon.ico"):
+        return FileResponse("dashboard/assets/favicon.ico")
+    elif os.path.exists("dashboard/favicon.ico"):
+        return FileResponse("dashboard/favicon.ico")
+    raise HTTPException(status_code=404, detail="Favicon not found")
 
 @app.get("/", include_in_schema=False)
 def root_redirect():

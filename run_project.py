@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-SIH26170 Unified Project Launcher
+Screening AI Unified Project Launcher
 Launches the FastAPI backend and serves the Clean White Aerospace QA Dashboard.
 """
 import os
@@ -9,7 +9,7 @@ import subprocess
 
 def main():
     print("=" * 78)
-    print("SIH26170: WhiteBox Burn-In Screening & Anomaly Intelligence (ISRO Aerospace QA)")
+    print("Screening AI: AI-Driven Anomaly Detection in Component Burn-In & Screening")
     print("=" * 78)
 
     # Use virtual environment python if available

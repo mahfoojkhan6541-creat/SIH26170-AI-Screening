@@ -1,7 +1,7 @@
 @echo off
-title SIH26170 - WhiteBox Burn-In Screening & Anomaly Intelligence
+title Screening AI - ISRO Aerospace QA Intelligence
 echo ==============================================================================
-echo SIH26170: WhiteBox Burn-In Screening & Anomaly Intelligence (ISRO Aerospace QA)
+echo Screening AI: AI-Driven Anomaly Detection in Component Burn-In & Screening
 echo Starting Backend API and Clean White Aerospace Dashboard...
 echo ==============================================================================
 

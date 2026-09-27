@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Batch Screening &bull; ISRO PS26170 Burn-In Screening QA Intelligence</title>
+  <title>Batch Screening &bull; Screening AI &bull; ISRO PS26170 Intelligence</title>
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="shortcut icon" href="favicon.ico">
   
   <!-- Modern Clean Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -535,14 +537,10 @@
     <aside class="app-sidebar">
       <div class="sidebar-header">
         <div class="sidebar-logo-badge">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-            <polyline points="2 17 12 22 22 17"></polyline>
-            <polyline points="2 12 12 17 22 12"></polyline>
-          </svg>
+          <img src="assets/isro_logo.png" alt="ISRO Official Logo" class="sidebar-logo-img">
         </div>
         <div class="sidebar-brand-text">
-          <span class="sidebar-brand-title">Burn-In Screening</span>
+          <span class="sidebar-brand-title">Screening AI</span>
           <span class="sidebar-brand-sub">ISRO PS26170 QA</span>
         </div>
       </div>
@@ -616,27 +614,46 @@
          ======================================================================= -->
     <div class="app-main-wrapper">
 
-      <!-- Header & Dataset Switcher (Compact Modern Workspace) -->
+      <!-- Compact Space-Efficient Header (Consistent Across All Pages) -->
       <header class="app-workspace-header">
+        <!-- Row 1: Brand & Page Title + Main Action Buttons -->
         <div class="header-top-row">
           <div class="brand-cluster">
             <div class="brand-logo-badge">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-                <polyline points="2 17 12 22 22 17"></polyline>
-                <polyline points="2 12 12 17 22 12"></polyline>
-              </svg>
+              <img src="assets/isro_logo.png" alt="ISRO Official Logo" class="header-logo-img">
             </div>
-            <div class="brand-titles">
-              <div class="brand-eyebrow">
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
-                <span>ISRO &bull; SIH26170 QA INTELLIGENCE</span>
-              </div>
-              <div class="brand-main-title">Batch Component Screening Workspace</div>
+            <div class="brand-title-wrap">
+              <h1 class="brand-main-title">Screening AI &bull; Batch Screening</h1>
+              <span class="brand-eyebrow-tag">ISRO PS26170 QA</span>
             </div>
           </div>
 
-          <!-- Dataset Switcher Pills -->
+          <div class="header-action-group">
+            <button class="btn-hdr-action btn-hdr-sim" id="btnLiveSim" onclick="toggleLiveSimulation()" title="Start real-time burn-in chamber telemetry simulation">
+              <span class="sim-pulse-dot" id="simPulseDot"></span>
+              <span id="btnLiveSimText">Live Simulation</span>
+            </button>
+            <button class="btn-hdr-action btn-hdr-reset" id="btnLiveReset" onclick="resetLiveSimulation()" style="display:none;" title="Reset Simulation to Initial State">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              <span>Reset</span>
+            </button>
+            <button class="btn-hdr-action btn-hdr-upload" onclick="openUploadModal()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span>Upload Data</span>
+            </button>
+            <button class="btn-hdr-action btn-hdr-export" onclick="exportCertifiedAuditCsv()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Audit Export</span>
+            </button>
+            <a href="/dashboard/docs/SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf" target="_blank" class="btn-hdr-action btn-hdr-pdf">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span>PDF Report</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Row 2: Dataset Scope Switcher + Flight Telemetry Strip -->
+        <div class="header-sub-row">
           <div class="dataset-switcher" id="datasetSwitcher">
             <button class="dataset-pill active" onclick="handleDatasetSwitch('D2')" id="pill-D2">
               <span class="pill-dot"></span>
@@ -651,10 +668,7 @@
               <span>ISRO Stream (Live)</span>
             </button>
           </div>
-        </div>
 
-        <!-- Sub-Bar (Run ID + Telemetry + Export + PDF Report) -->
-        <div class="header-sub-row">
           <div class="run-telemetry-strip" id="runStatusPill">
             <span class="pulse-dot"></span>
             <span class="telemetry-badge-text" id="telemetryStatusBadge">BENCHMARK EVAL</span>
@@ -664,29 +678,6 @@
             <span class="telemetry-item" id="runStatusModel">MODEL FROZEN (NO LEAKAGE)</span>
             <span class="telemetry-divider">&bull;</span>
             <span class="tag-gate-pass">12/12 GATES PASSED</span>
-          </div>
-
-          <div class="header-action-group">
-            <button class="btn-hdr-action btn-hdr-sim" id="btnLiveSim" onclick="toggleLiveSimulation()" title="Start real-time burn-in chamber telemetry simulation">
-              <span class="sim-pulse-dot" id="simPulseDot"></span>
-              <span id="btnLiveSimText">Live Simulation</span>
-            </button>
-            <button class="btn-hdr-action btn-hdr-reset" id="btnLiveReset" onclick="resetLiveSimulation()" style="display:none;" title="Reset Simulation to Initial State">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-              <span>Reset</span>
-            </button>
-            <button class="btn-hdr-action btn-hdr-upload" onclick="openUploadModal()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              <span>Upload Data</span>
-            </button>
-            <button class="btn-hdr-action btn-hdr-export" onclick="exportCertifiedAuditCsv()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              <span>Audit Export</span>
-            </button>
-            <a href="/dashboard/docs/SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf" target="_blank" class="btn-hdr-action btn-hdr-pdf">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-              <span>PDF Report</span>
-            </a>
           </div>
         </div>
       </header>
@@ -698,17 +689,13 @@
         <div class="mission-briefing-strip">
           <div class="briefing-left">
             <div class="briefing-icon-badge">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                 <circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>
               </svg>
             </div>
             <div class="briefing-texts">
-              <div class="briefing-title">
-                <span>Batch Component Screening Workspace</span>
-              </div>
-              <div class="briefing-desc">
-                Component-level anomaly scoring, 12-check quality gate status, and auditable QA sign-off.
-              </div>
+              <span class="briefing-title">Screening Workspace:</span>
+              <span class="briefing-desc">Component anomaly scoring, quality gate status, and auditable QA sign-off.</span>
             </div>
           </div>
           <div class="briefing-right-tags">
