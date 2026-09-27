@@ -992,6 +992,11 @@
     window.addEventListener('DOMContentLoaded', () => {
       syncHeaderRunStatus(currentDataset);
       renderDiagnostics();
+      if (typeof fetchLiveWorkspaceData === 'function') {
+        fetchLiveWorkspaceData(() => {
+          renderDiagnostics();
+        });
+      }
     });
 
     window.addEventListener('resize', () => {

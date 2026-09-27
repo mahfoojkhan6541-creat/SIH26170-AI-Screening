@@ -4,8 +4,13 @@
     "model_path": "models/D2_v2_no_acceleration_frozen_model.pkl",
     "config_path": "models/D2_v2_no_acceleration_config.pkl",
     "preprocessor_path": "models/D2_v2_no_acceleration_preprocessing.pkl",
+    "model_version": "v2_clean_split",
     "feature_count": 156,
     "feature_family": "v2_no_acceleration",
+    "training_split": "is_test == 0 (Clean Train Only, Native Evaluation on is_test == 1)",
+    "contamination": 0.01,
+    "random_seed": 42,
+    "trained_at": "2026-09-27T08:55:00+00:00",
     "validation_threshold": 0.393578,
     "watch_threshold": 0.35,
     "decision_level": "MaterialID",
@@ -15,7 +20,10 @@
       "accuracy": 0.8908,
       "recall": 0.9623,
       "precision": 0.75,
-      "f1": 0.843
+      "f1": 0.843,
+      "balanced_accuracy": 0.898,
+      "fpr": 0.1667,
+      "fnr": 0.0377
     }
   },
   "D1": {
@@ -67,5 +75,35 @@
         "Device4b"
       ]
     }
+  },
+  "NASA_GPR_v2": {
+    "dataset_name": "NASA PCoE Power Semiconductor Thermal Aging (Physical Device Clean)",
+    "model_type": "GaussianProcessRegressor",
+    "model_path": "models/NASA_GPR_v2_clean_model.pkl",
+    "param_target": "param_01",
+    "early_history_hours": 24.0,
+    "forecast_horizon_hours": 168.0,
+    "status": "frozen",
+    "version": "v2_physical_device_clean",
+    "physical_devices_used": [
+      "Device_2",
+      "Device_3",
+      "Device_4",
+      "Device_5"
+    ],
+    "training_devices": [
+      "Device_2",
+      "Device_3",
+      "Device_5"
+    ],
+    "held_out_test_device": "Device_4",
+    "metrics": {
+      "held_out_mae_168h": 0.010279,
+      "held_out_relative_error_pct": 10.47,
+      "held_out_coverage_2sigma": 1.0,
+      "lopd_cv_mean_mae_168h": 0.063027,
+      "lopd_cv_mean_coverage_2sigma": 0.9167
+    },
+    "trained_at": "2026-09-27T09:30:21.231687+00:00"
   }
 }

@@ -513,8 +513,8 @@
           <div class="surface-card" style="margin-bottom: 0;">
             <div class="card-header-bar">
               <div class="card-header-titles">
-                <h2>Fleet Disposition Breakdown</h2>
-                <p>Qualified Flight Hardware vs. Human QA Escalations</p>
+                <h2>Fleet AI Advisory Disposition Breakdown</h2>
+                <p>Screening Advisory Status &bull; Subject to Certified Human QA Final Disposition</p>
               </div>
               <span class="tag-mono" id="dispositionTotalTag">174 Evaluated</span>
             </div>
@@ -653,11 +653,11 @@
               <div class="lot-kpi-chips">
                 <div class="lot-chip">
                   <span class="lot-chip-label">Batches:</span>
-                  <strong class="lot-chip-val" id="lotTotalBatchesVal">15 Batches</strong>
+                  <strong class="lot-chip-val" id="lotTotalBatchesVal">--</strong>
                 </div>
                 <div class="lot-chip">
                   <span class="lot-chip-label">Avg Yield:</span>
-                  <strong class="lot-chip-val" id="lotAvgYieldVal">60.9%</strong>
+                  <strong class="lot-chip-val" id="lotAvgYieldVal">--</strong>
                 </div>
               </div>
 
@@ -742,13 +742,13 @@
 
     function renderOverview() {
       const data = getDatasetComponents(currentDataset);
-      const total = data.length || 174;
+      const total = data.length || 0;
       document.getElementById('sidebarScreeningChip').innerText = String(total);
       document.getElementById('dispositionTotalTag').innerText = `${total} Evaluated`;
 
-      const pass = data.filter(d => d.disposition === 'PASS').length || (currentDataset === 'D2' ? 106 : Math.round(total * 0.7));
-      const review = data.filter(d => d.disposition === 'REVIEW').length || (currentDataset === 'D2' ? 48 : Math.round(total * 0.2));
-      const reject = data.filter(d => d.disposition === 'REJECT').length || (currentDataset === 'D2' ? 20 : total - pass - review);
+      const pass = data.filter(d => d.disposition === 'PASS').length;
+      const review = data.filter(d => d.disposition === 'REVIEW').length;
+      const reject = data.filter(d => d.disposition === 'REJECT').length;
 
       // Render KPIs
       if (currentDataset === 'CUSTOM') {
@@ -770,7 +770,7 @@
         document.getElementById('kpi4Badge').innerText = `Review Overkill: ${(custom && custom.review_count) || 0}`;
         document.getElementById('kpi4Context').innerText = 'Controlled Safety Margin';
       } else if (currentDataset === 'D2') {
-        document.getElementById('kpiScreenedCount').innerText = '174';
+        document.getElementById('kpiScreenedCount').innerText = String(total);
         document.getElementById('kpi1Badge').innerText = 'Total MaterialIDs evaluated';
         document.getElementById('kpi1Context').innerText = '100% Gated Lot Qualification';
 
@@ -886,6 +886,12 @@
     window.addEventListener('DOMContentLoaded', () => {
       syncHeaderRunStatus(currentDataset);
       renderOverview();
+      if (typeof fetchLiveWorkspaceData === 'function') {
+        fetchLiveWorkspaceData(() => {
+          renderOverview();
+          renderCurrentLotChart();
+        });
+      }
     });
 
     window.addEventListener('resize', () => {

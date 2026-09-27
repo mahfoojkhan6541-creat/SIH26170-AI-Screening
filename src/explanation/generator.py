@@ -17,9 +17,7 @@ class ExplanationGenerator:
         anomaly_score = fused.get("anomaly_score", 0.0)
         has_forecast = fused.get("has_forecast", False)
 
-        # 1. Plain-English narrative following Section 33.2 template
-        paragraphs = []
-
+        # 1. Plain-English narrative following screening evidence flow
         if recommendation == "PASS":
             narrative = (
                 f"Component {component_id} is operating nominally within expected screening parameters. "
@@ -39,7 +37,7 @@ class ExplanationGenerator:
                 f"Component {component_id} shows severe anomalous behavior with an anomaly score of {anomaly_score:.3f}, "
                 "greatly exceeding acceptable screening limits. "
                 "The trajectory significantly departs from comparable lot peers under identical test conditions. "
-                "Hardware rejection is recommended subject to QA engineering confirmation."
+                "Hardware rejection candidate is recommended subject to mandatory Human QA engineering disposition."
             )
         else: # REVIEW
             reason_clauses = []
@@ -47,6 +45,8 @@ class ExplanationGenerator:
                 reason_clauses.append(f"its anomaly score ({anomaly_score:.3f}) is elevated above the review threshold")
             if fused.get("is_common_mode"):
                 reason_clauses.append("a common-mode response was detected across the peer population indicating possible chamber variation")
+            if fused.get("is_multi_param_anomaly"):
+                reason_clauses.append(f"joint multi-parameter correlation discordance was detected (D_M={fused.get('mahalanobis_distance', 0.0):.2f})")
             if fused.get("wide_uncertainty"):
                 reason_clauses.append("the GPR forecast interval is broad due to sparse trajectory history")
 
@@ -55,6 +55,11 @@ class ExplanationGenerator:
                 f"{'; '.join(reason_clauses) if reason_clauses else 'behavior warrants human engineering evaluation'}. "
                 "Measurements are trusted, but trajectory features indicate watch-level deviation from nominal peer baselines."
             )
+
+        # Append multi-parameter evidence clause if detected
+        multi_param = evidence_pack.get("multi_parameter_correlation", {})
+        if multi_param.get("abnormal_joint_behavior_detected") and recommendation in ["REVIEW", "REJECT"]:
+            narrative += f" Multi-parameter analysis: {multi_param.get('evidence_summary')}."
 
         # Append TreeSHAP feature attribution clause if available
         top_feats = evidence_pack.get("anomaly", {}).get("top_features", [])
@@ -66,8 +71,10 @@ class ExplanationGenerator:
             if top_drivers:
                 narrative += f" Primary contributing parameter features: {'; '.join(top_drivers)}."
 
-        # 2. Physical-Cause Context Hypotheses (Section 35)
-        # Note: Interpretive hypotheses only, never stated as automated physical diagnoses.
+        # Explicit governance clause
+        narrative += " [Governance: AI recommendation is screening advisory only; final disposition requires certified Human QA sign-off.]"
+
+        # 2. Physical-Cause Context Hypotheses
         hypotheses = []
         if anomaly_score >= 0.65:
             hypotheses.append({
@@ -89,5 +96,7 @@ class ExplanationGenerator:
             "plain_english_reason": narrative,
             "physical_hypotheses": hypotheses,
             "confidence_assessment": decision_result.get("confidence", "MODERATE"),
-            "recommended_action": decision_result.get("action", "")
+            "recommended_action": decision_result.get("action", ""),
+            "authority": decision_result.get("authority", "ADVISORY_ONLY"),
+            "requires_human_disposition": decision_result.get("requires_human_disposition", True)
         }

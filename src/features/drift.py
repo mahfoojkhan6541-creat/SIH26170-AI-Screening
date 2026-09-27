@@ -15,7 +15,8 @@ class DriftFeatureExtractor:
                 f"{param_key}_drift_slope": 0.0,
                 f"{param_key}_trajectory_std": 0.0,
                 f"{param_key}_curvature": np.nan,
-                "drift_status": "unavailable_insufficient_points"
+                "drift_status": "unavailable_insufficient_points",
+                "curvature_status": "unavailable_insufficient_points"
             }
 
         values = trajectory[param_key].values.astype(float)

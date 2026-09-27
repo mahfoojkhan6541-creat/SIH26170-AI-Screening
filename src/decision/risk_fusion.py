@@ -2,7 +2,7 @@ from typing import Dict, Any
 
 
 class RiskFusionEngine:
-    """Combines independent anomaly, forecast, data-quality, and confounder evidence."""
+    """Combines independent anomaly, forecast, data-quality, confounder, and multi-parameter evidence."""
 
     @staticmethod
     def fuse_evidence(evidence_pack: Dict[str, Any]) -> Dict[str, Any]:
@@ -10,6 +10,7 @@ class RiskFusionEngine:
         forecast = evidence_pack.get("forecast", {})
         quality = evidence_pack.get("data_quality", {})
         confounder = evidence_pack.get("confounder", {})
+        multi_param = evidence_pack.get("multi_parameter_correlation", {})
 
         score = float(anomaly.get("score", 0.0))
         is_high_anomaly = score >= 0.85
@@ -18,7 +19,11 @@ class RiskFusionEngine:
         is_quality_compromised = str(quality.get("status", "")).upper() in ["QUARANTINE", "BLOCK", "FAILED", "INVALID", "ERROR"]
         is_common_mode = confounder.get("common_mode_detected", False)
 
-        has_forecast = forecast.get("status") == "available"
+        is_multi_param_anomaly = bool(multi_param.get("abnormal_joint_behavior_detected", False))
+        mahalanobis_dist = float(multi_param.get("mahalanobis_distance", 0.0))
+        discordant_count = int(multi_param.get("discordant_pairs_count", 0))
+
+        has_forecast = forecast.get("status") in ["available", "success"]
         is_forecast_risky = False
         wide_uncertainty = False
 
@@ -37,6 +42,9 @@ class RiskFusionEngine:
             "is_review_anomaly": is_review_anomaly,
             "is_quality_compromised": is_quality_compromised,
             "is_common_mode": is_common_mode,
+            "is_multi_param_anomaly": is_multi_param_anomaly,
+            "mahalanobis_distance": mahalanobis_dist,
+            "discordant_pairs_count": discordant_count,
             "has_forecast": has_forecast,
             "is_forecast_risky": is_forecast_risky,
             "wide_uncertainty": wide_uncertainty

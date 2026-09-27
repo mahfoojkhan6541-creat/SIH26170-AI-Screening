@@ -12,8 +12,8 @@ if exist venv\Scripts\python.exe (
 )
 
 echo.
-echo [1/2] Updating dynamic dashboard data artifacts...
-%PYTHON_EXEC% scripts\build_rich_dashboard_data.py
+echo [1/2] Synchronizing authentic database and dashboard artifacts...
+%PYTHON_EXEC% scripts\export_all_real_data.py
 
 echo.
 echo [2/2] Launching Uvicorn Server on http://localhost:8000 ...

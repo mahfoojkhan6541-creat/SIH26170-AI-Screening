@@ -60,7 +60,7 @@ class FeatureEngineeringEngine:
             numerical_features[f"{p}_trajectory_std"] = d_feat[f"{p}_trajectory_std"]
             if not np.isnan(d_feat[f"{p}_curvature"]):
                 numerical_features[f"{p}_curvature"] = d_feat[f"{p}_curvature"]
-            feature_status[f"{p}_curvature"] = d_feat["curvature_status"]
+            feature_status[f"{p}_curvature"] = d_feat.get("curvature_status", "unavailable_insufficient_points")
 
             # Peer-relative features
             current_val = b_feat[f"{p}_current"]

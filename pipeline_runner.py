@@ -38,6 +38,7 @@ from src.mapping.canonical import CanonicalTransformer
 from src.validation.validator import DataQualityValidator
 from src.validation.quarantine import QuarantineManager
 from src.grouping.population_selector import PopulationSelector
+from src.grouping.common_mode import CommonModeDetector
 from src.features.engineering import FeatureEngineeringEngine
 from src.models.anomaly.isolation_forest import IsolationForestAnomalyDetector
 from src.models.forecasting.gpr_forecaster import GPRTrajectoryForecaster
@@ -257,14 +258,32 @@ def run_pipeline(
                     future_checkpoints=[float(last_cp) + 24.0],
                     min_history_points=3
                 )
+                forecast_results_map[cid] = f_res
                 if f_res.get("forecast_status") in ["success", "available"]:
-                    forecast_results_map[cid] = f_res
                     gpr_count += 1
+            else:
+                forecast_results_map[cid] = {
+                    "forecast_status": "unavailable_insufficient_history",
+                    "forecast_mean": None,
+                    "forecast_std": None,
+                    "interval": None,
+                    "forecast_horizon": None,
+                    "reason": "Insufficient checkpoints (< 3) before forecast horizon"
+                }
         print(f"  ✓ Fit GPR degradation trajectories for {gpr_count} components")
         print(f"  ✓ Evaluated Gaussian Process predictive mean and ±2σ uncertainty bounds")
     else:
+        for cid in sample_components:
+            forecast_results_map[cid] = {
+                "forecast_status": "unavailable_insufficient_history",
+                "forecast_mean": None,
+                "forecast_std": None,
+                "interval": None,
+                "forecast_horizon": None,
+                "reason": "Dataset has insufficient checkpoints (< 3) for trajectory forecasting"
+            }
         print("  ⊘ GPR Forecasting Branch bypassed: Dataset has insufficient checkpoints (< 4).")
-        print("    (Adhering to Section 25.4 rule: no hallucinated trajectory forecasting)")
+        print("    (Adhering to Section 25.4 rule: no hallucinated trajectory forecasting, status: unavailable_insufficient_history)")
 
     # -------------------------------------------------------------
     # Step 9: Decision Layer, Risk Fusion & Explanations (Phase 5)
@@ -274,6 +293,7 @@ def run_pipeline(
     decision_engine = DecisionRuleEngine(review_threshold=0.65, reject_threshold=0.85)
     explanation_gen = ExplanationGenerator()
     state_mgr = ProgressiveStateManager()
+    cm_detector = CommonModeDetector()
 
     decisions_breakdown = {"PASS": 0, "RETEST": 0, "REVIEW": 0, "REJECT": 0}
     sample_explanations = []
@@ -285,6 +305,12 @@ def run_pipeline(
         f_info = forecast_results_map.get(cid)
 
         # 1. Evidence Pack
+        confounder_info = cm_detector.detect_for_component(
+            canonical_df=valid_df,
+            target_component_id=cid,
+            checkpoint=last_cp,
+            param_keys=param_keys
+        )
         top_anom_feats = if_detector.explain_component(X_df.loc[cid])
         evidence = evidence_gen.build_evidence_pack(
             component_id=cid,
@@ -297,7 +323,8 @@ def run_pipeline(
                 "top_features": top_anom_feats
             },
             forecast_info=f_info,
-            peer_evidence=meta_df.loc[cid].to_dict() if cid in meta_df.index else {}
+            peer_evidence=meta_df.loc[cid].to_dict() if cid in meta_df.index else {},
+            confounder_info=confounder_info
         )
 
         # 2. Operational Decision

@@ -58,10 +58,15 @@ results/*_material_level_validation.csv
 !models/D2_v2_no_acceleration_config.pkl
 !models/D2_v2_no_acceleration_preprocessing.pkl
 !models/NASA_GPR_frozen_model.pkl
+!models/NASA_GPR_v2_clean_model.pkl
 !models/D1_final_frozen_model.pkl
 !models/D1_final_frozen_config.pkl
 !models/ISRO_frozen_model.pkl
 !models/ISRO_frozen_config.pkl
+
+# Quarantine & Test Runtime Dumps
+data/quarantine/*
+!data/quarantine/.gitkeep
 
 # User Uploaded Data Files
 data/uploads/*

@@ -2,7 +2,7 @@ import os
 import json
 import datetime
 import pandas as pd
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 
 class QuarantineManager:
@@ -41,3 +41,16 @@ class QuarantineManager:
             }, f, indent=2)
 
         return batch_filepath
+
+    def quarantine_records(
+        self,
+        quarantined_df: pd.DataFrame,
+        run_id: str = "default_run",
+        reason: str = "Data quality gate failure",
+        summary: Optional[Dict[str, Any]] = None
+    ) -> str:
+        """Isolate quarantined records with run_id and audit provenance."""
+        if summary is None:
+            summary = {"events_detected": [{"reason": reason, "count": len(quarantined_df)}]}
+        return self.isolate_records(quarantined_df, run_id, summary)
+

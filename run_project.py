@@ -16,8 +16,8 @@ def main():
     venv_py = os.path.join("venv", "Scripts", "python.exe") if os.name == "nt" else os.path.join("venv", "bin", "python")
     py_exec = venv_py if os.path.exists(venv_py) else sys.executable
 
-    print("\n[1/2] Updating dynamic dashboard data artifacts...")
-    subprocess.run([py_exec, "scripts/build_rich_dashboard_data.py"], check=True)
+    print("\n[1/2] Synchronizing authentic database and dashboard artifacts...")
+    subprocess.run([py_exec, "scripts/export_all_real_data.py"], check=True)
 
     print("\n[2/2] Launching Uvicorn Server on http://localhost:8000 ...")
     print("  -> Dashboard UI:    http://localhost:8000/ or http://localhost:8000/dashboard/")

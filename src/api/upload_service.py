@@ -291,17 +291,17 @@ def execute_upload_pipeline(
     # -------------------------------------------------------------
     # 0. Centralized Model Registry Binding (D2, D1, ISRO)
     # -------------------------------------------------------------
+    import re
     fn_lower = os.path.basename(saved_path).lower()
     dn_lower = dataset_name.lower()
     raw_cols_lower = [str(c).lower() for c in raw_df.columns]
 
     is_d2 = (
-        ("materialid" in raw_cols_lower and any("feature_1" in c for c in raw_cols_lower))
-        or "d2" in dn_lower
-        or "d2" in fn_lower
+        ("materialid" in raw_cols_lower and any("feature_1" in c for c in raw_cols_lower) and len(raw_df.columns) > 18)
+        or bool(re.search(r'(?:^|[\s_.-])d2(?:$|[\s_.-])', dn_lower))
     )
     is_d1 = (
-        ("d1" in dn_lower or "d1" in fn_lower)
+        bool(re.search(r'(?:^|[\s_.-])d1(?:$|[\s_.-])', dn_lower))
         and not is_d2
     )
     is_isro = (

@@ -36,6 +36,8 @@ function getDatasetComponents(key) {
     base = custom ? (custom.components || []) : [];
   } else if (key === 'D1') {
     base = window.REAL_D1_COMPONENTS || [];
+  } else if (key === 'NASA') {
+    base = window.REAL_NASA_COMPONENTS || [];
   } else if (key === 'ISRO') {
     base = window.REAL_ISRO_COMPONENTS || [];
   } else {
@@ -47,6 +49,51 @@ function getDatasetComponents(key) {
     return [...window.ISRO_SIMULATION.streamedItems, ...base];
   }
   return base;
+}
+
+// Live FastAPI workspace fetcher
+let isFetchingLive = false;
+async function fetchLiveWorkspaceData(callback) {
+  if (isFetchingLive) return;
+  isFetchingLive = true;
+  try {
+    const res = await fetch('/api/workspace');
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.scores && Array.isArray(data.scores)) {
+        window.REAL_WORKSPACE_DATA = data;
+        window.REAL_D2_COMPONENTS = data.scores.filter(s => {
+          const cid = String(s.id || '');
+          const dev = String(s.device_type || '');
+          const pop = String(s.population_id || '');
+          return dev.includes('D2') || pop.includes('D2') || (!isNaN(cid) && !cid.startsWith('D1-') && !cid.startsWith('Device') && !cid.startsWith('STREAM') && !cid.startsWith('SIM-'));
+        });
+        window.REAL_D1_COMPONENTS = data.scores.filter(s => {
+          const cid = String(s.id || '');
+          const dev = String(s.device_type || '');
+          return dev.includes('D1') || cid.startsWith('D1-');
+        });
+        window.REAL_NASA_COMPONENTS = data.scores.filter(s => {
+          const cid = String(s.id || '');
+          const dev = String(s.device_type || '');
+          return cid.startsWith('Device') || dev.includes('IGBT');
+        });
+        window.REAL_ISRO_COMPONENTS = data.scores.filter(s => {
+          const cid = String(s.id || '');
+          const lot = String(s.lot || s.lot_id || '');
+          const dev = String(s.device_type || '');
+          return lot.includes('ISRO') || dev.includes('ISRO') || cid.startsWith('STREAM') || cid.startsWith('SIM-');
+        });
+        if (typeof callback === 'function') {
+          callback(data);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("Backend API unreachable, using cached offline dataset:", err);
+  } finally {
+    isFetchingLive = false;
+  }
 }
 
 // 2. HEADER RUN STATUS & SWITCHER SYNC
@@ -1070,15 +1117,46 @@ function renderFabricationLotChart(containerId, data, options = {}) {
     window._onLotChartLotClick = options.onLotSelect;
   }
 
+  // Detect genuine lot metadata
+  const hasRealLots = (data || []).some(item => {
+    const rawLot = (item.lot_id !== undefined && item.lot_id !== null ? item.lot_id : item.lot);
+    if (!rawLot) return false;
+    const s = String(rawLot).trim();
+    return s.length > 0 && s !== 'null' && s !== 'undefined' && !s.startsWith('N/A') && !s.toLowerCase().includes('unspecified') && !s.startsWith('LOT-UPLOAD-');
+  });
+
+  if (!hasRealLots) {
+    container.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:140px;color:#64748B;font-size:12.5px;text-align:center;padding:24px;background:#F8FAFC;border:1px dashed #CBD5E1;border-radius:6px;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" style="margin-bottom:8px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span style="font-weight:600;color:#475569;font-size:13px;">Lot-wise analysis unavailable: source dataset contains no lot metadata.</span>
+        <span style="font-size:11.5px;color:#94A3B8;margin-top:5px;max-width:540px;">Native dataset provides component-level screening across standard Step checkpoints. When uploaded data contains a real lot_id, lot-wise grouping and charts are automatically enabled.</span>
+      </div>
+    `;
+    const totalBatchesEl = document.getElementById('lotTotalBatchesVal');
+    const avgYieldEl = document.getElementById('lotAvgYieldVal');
+    if (totalBatchesEl) totalBatchesEl.innerText = "No Lot Metadata";
+    if (avgYieldEl) {
+      const totalAll = (data || []).length;
+      const passAll = (data || []).filter(item => (item.disposition || item.action || 'PASS').toUpperCase() === 'PASS').length;
+      const avgYield = totalAll > 0 ? ((passAll / totalAll) * 100).toFixed(1) : '100.0';
+      avgYieldEl.innerText = `${avgYield}% (Cohort)`;
+    }
+    return;
+  }
+
   // Aggregate by actual component lot
   const lotMap = {};
   (data || []).forEach(item => {
-    let lot = (item.lot || 'LOT-UPLOAD-01').trim();
+    const rawLot = (item.lot_id !== undefined && item.lot_id !== null ? item.lot_id : item.lot);
+    if (!rawLot) return;
+    const lot = String(rawLot).trim();
+    if (lot.length === 0 || lot === 'null' || lot.startsWith('N/A') || lot.toLowerCase().includes('unspecified') || lot.startsWith('LOT-UPLOAD-')) return;
     if (!lotMap[lot]) {
       lotMap[lot] = { lot, pass: 0, review: 0, reject: 0, total: 0 };
     }
     lotMap[lot].total += 1;
-    const disp = (item.disposition || 'PASS').toUpperCase();
+    const disp = (item.disposition || item.action || 'PASS').toUpperCase();
     if (disp === 'PASS') lotMap[lot].pass += 1;
     else if (disp === 'REVIEW') lotMap[lot].review += 1;
     else if (disp === 'REJECT') lotMap[lot].reject += 1;
@@ -1089,7 +1167,9 @@ function renderFabricationLotChart(containerId, data, options = {}) {
   );
 
   if (lots.length === 0) {
-    container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#94A3B8;font-size:12px;">No fabrication lot data available.</div>`;
+    container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;min-height:140px;color:#64748B;font-size:12px;">Lot-wise analysis unavailable: source dataset contains no lot metadata.</div>`;
+    const totalBatchesEl = document.getElementById('lotTotalBatchesVal');
+    if (totalBatchesEl) totalBatchesEl.innerText = "No Lot Metadata";
     return;
   }
 
@@ -1241,10 +1321,7 @@ function renderFabricationLotChart(containerId, data, options = {}) {
 
     // X-Axis Label
     let label = lot.lot;
-    if (label.startsWith('LOT-D2-')) label = 'L' + label.replace('LOT-D2-', '');
-    else if (label.startsWith('LOT-D1-')) label = 'L' + label.replace('LOT-D1-', '');
-    else if (label.startsWith('FLIGHT-LOT-')) label = 'FL-' + label.replace('FLIGHT-LOT-', '');
-    else if (label.length > 8) label = label.slice(0, 7) + '…';
+    if (label.length > 10) label = label.slice(0, 9) + '…';
 
     svg += `<text x="${slotCenterX}" y="${baselineY + 14}" fill="${isSelected ? '#0F766E' : '#64748B'}" font-size="9" font-weight="${isSelected ? '800' : '600'}" font-family="var(--font-mono)" text-anchor="middle">${label}</text>`;
     svg += `<text x="${slotCenterX}" y="${baselineY + 25}" fill="#94A3B8" font-size="8" font-family="var(--font-mono)" text-anchor="middle">${lot.total}u</text>`;
@@ -1395,13 +1472,10 @@ const SIM_PARAM_POOL = [
 
 function generateSimulatedComponent(seq) {
   const baseNum = 175 + seq;
-  const id = `SIM-${String(baseNum).padStart(3, '0')}`;
-  const lotNum = String((seq % 12) + 1).padStart(2, '0');
-  const lot = `LOT-D2-${lotNum}`;
+  const id = `STREAM-${String(baseNum).padStart(3, '0')}`;
   const paramObj = SIM_PARAM_POOL[seq % SIM_PARAM_POOL.length];
 
   // Distribution: ~70% PASS, ~18% REVIEW, ~12% REJECT
-  // Every 7th tick produces an intentional critical defect for demo excitement!
   const isReject = (seq % 7 === 4);
   const isReview = !isReject && (seq % 4 === 2);
   const disposition = isReject ? 'REJECT' : (isReview ? 'REVIEW' : 'PASS');
@@ -1424,42 +1498,41 @@ function generateSimulatedComponent(seq) {
     drift = +(0.08 + Math.random() * 0.14).toFixed(2);
   }
 
-  // Trajectory over 0h -> 168h
-  const traj = [0.10];
-  let cur = 0.10;
-  for (let s = 1; s < 7; s++) {
-    const delta = isReject ? (0.15 + Math.random() * 0.15) : (isReview ? (0.05 + Math.random() * 0.06) : (0.02 + Math.random() * 0.03));
-    cur += delta;
-    traj.push(+cur.toFixed(2));
-  }
+  const v0 = 0.10;
+  const v1 = +(v0 + drift).toFixed(2);
+  const traj = [v0, v1];
 
   return {
     id: id,
-    lot: lot,
-    device_type: "DISCRETE-HEMT",
+    lot: null,
+    lot_id: null,
+    device_type: "Chamber Telemetry Stream",
+    source: "ISRO_Telemetry_Stream",
     parameter: paramObj.param,
     unit: "arb_norm",
-    checkpoint: "CP-Post (168h)",
+    checkpoint: "Step 2",
     disposition: disposition,
     rule: isReject ? "RULE_CRITICAL_ANOMALY" : (isReview ? "RULE_ELEVATED_WATCH_LIST" : "RULE_PASS_NOMINAL"),
     reason: isReject
-      ? `MaterialID ${id} exhibited elevated drift (+${peerZ}σ) and excessive isolation score (${rawScore.toFixed(4)}) beyond safety envelope. Data quality passed 12/12 gates. Conservative disposition: REJECT.`
+      ? `Telemetry item ${id} exhibited elevated drift (+${peerZ}σ) and excessive isolation score (${rawScore.toFixed(4)}) beyond safety envelope. Data quality passed 12/12 gates. Recommended: REJECT.`
       : (isReview
-          ? `MaterialID ${id} requires QA Engineering REVIEW because anomaly score (${rawScore.toFixed(4)}) is elevated above watch threshold (0.350). Peer deviation is +${peerZ}σ. Data quality passed 12/12 gates.`
-          : `MaterialID ${id} demonstrated clean monotonic thermal stability with nominal drift (+${peerZ}σ). Space flight qualified.`),
+          ? `Telemetry item ${id} requires QA Engineering REVIEW because anomaly score (${rawScore.toFixed(4)}) is elevated above watch threshold (0.350). Peer deviation is +${peerZ}σ. Data quality passed 12/12 gates.`
+          : `Telemetry item ${id} demonstrated clean monotonic thermal stability with nominal drift (+${peerZ}σ). Space flight qualified.`),
     score: +rawScore.toFixed(4),
     raw_score: +rawScore.toFixed(4),
     calibrated_score: +calibratedScore.toFixed(2),
     status: isReject ? "HIGH" : (isReview ? "WATCH" : "NOMINAL"),
     quality_gate: "12/12 PASSED",
-    forecast_mean: +(cur * 1.1).toFixed(2),
-    forecast_std: 0.22,
-    lower_2sigma: +(cur * 0.8).toFixed(2),
-    upper_2sigma: +(cur * 1.4).toFixed(2),
-    forecast_horizon: 168.0,
+    forecast_status: "unavailable_insufficient_history",
+    forecast_reason: "GPR not applicable: insufficient trajectory history.",
+    forecast_mean: null,
+    forecast_std: null,
+    lower_2sigma: null,
+    upper_2sigma: null,
+    forecast_horizon: null,
     traj: traj,
-    steps: [0, 24, 48, 72, 96, 120, 144],
-    checkpoints_labels: ["0h", "24h", "48h", "72h", "96h", "120h", "144h"],
+    steps: [1, 2],
+    checkpoints_labels: ["Step 1", "Step 2"],
     drift: drift,
     peer_mean: 0.14,
     peer_std: 0.05,
@@ -1468,7 +1541,7 @@ function generateSimulatedComponent(seq) {
     spec_max: 1.5,
     shap: [
       { feature: "degradation_slope", val: `+${peerZ}σ`, score: +(rawScore * 0.9).toFixed(2), desc: "Checkpoint Acceleration" },
-      { feature: "cross_lot_variance", val: `+${(peerZ * 0.7).toFixed(1)}σ`, score: +(rawScore * 0.75).toFixed(2), desc: "Divergence from Nominal Lot" },
+      { feature: "cohort_variance", val: `+${(peerZ * 0.7).toFixed(1)}σ`, score: +(rawScore * 0.75).toFixed(2), desc: "Cohort Variance" },
       { feature: "spectral_kurtosis", val: `+${(peerZ * 0.6).toFixed(1)}σ`, score: +(rawScore * 0.55).toFixed(2), desc: "Signal Shape Anomaly" },
       { feature: "thermal_stability", val: `+${(peerZ * 0.4).toFixed(1)}σ`, score: +(rawScore * 0.4).toFixed(2), desc: "Temperature Sensitivity" }
     ],

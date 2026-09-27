@@ -321,79 +321,52 @@ def build_pdf(filename="docs/SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf"):
 
     nasa_rows = [
         [
-            Paragraph("Device ID", table_cell_header),
+            Paragraph("Physical Device", table_cell_header),
             Paragraph("Actual 168h", table_cell_header),
-            Paragraph("GPR 168h Forecast", table_cell_header),
-            Paragraph("&plusmn;2&sigma; Predictive Interval", table_cell_header),
+            Paragraph("GPR Forecast", table_cell_header),
+            Paragraph("&plusmn;2&sigma; Interval", table_cell_header),
             Paragraph("MAE", table_cell_header),
-            Paragraph("Disposition", table_cell_header),
+            Paragraph("Advisory Disp.", table_cell_header),
             Paragraph("Engineering Evidence / Rationale", table_cell_header)
         ],
         [
-            Paragraph("<b>Device4b</b> (Test)", table_cell_bold),
-            Paragraph("0.0982 A", table_cell),
-            Paragraph("0.0678 A", table_cell),
-            Paragraph("[-0.0131, +0.1487 A]", table_cell),
-            Paragraph("0.0304 A", table_cell),
-            Paragraph("<font color='#E11D48'><b>REJECT</b></font>", table_cell),
-            Paragraph("Accelerated negative drift slope (-0.0018/h) exceeding safety limit.", table_cell)
+            Paragraph("<b>Device_4</b> (Held-Out Test)", table_cell_bold),
+            Paragraph("0.1042 A", table_cell),
+            Paragraph("0.1144 A", table_cell),
+            Paragraph("[+0.0644, +0.1644 A]", table_cell),
+            Paragraph("0.0103 A", table_cell),
+            Paragraph("<font color='#0F766E'><b>PASS</b></font>", table_cell),
+            Paragraph("Untouched physical device holdout; 100% 2&sigma; coverage; nominal drift.", table_cell)
         ],
         [
-            Paragraph("<b>Device3b</b> (Test)", table_cell_bold),
-            Paragraph("0.2288 A", table_cell),
-            Paragraph("0.0634 A", table_cell),
-            Paragraph("[+0.0022, +0.1247 A]", table_cell),
-            Paragraph("0.1653 A", table_cell),
-            Paragraph("<font color='#E11D48'><b>REJECT</b></font>", table_cell),
-            Paragraph("Severe thermal surge (+113.1% drift), flagged as high-risk anomaly.", table_cell)
+            Paragraph("<b>Device_2</b> (Train Cohort)", table_cell_bold),
+            Paragraph("0.1507 A", table_cell),
+            Paragraph("0.1481 A", table_cell),
+            Paragraph("[+0.0981, +0.1981 A]", table_cell),
+            Paragraph("0.0026 A", table_cell),
+            Paragraph("<font color='#0F766E'><b>PASS</b></font>", table_cell),
+            Paragraph("Incorporates Device2 and Device2b; stable thermal bias trajectory.", table_cell)
         ],
         [
-            Paragraph("<b>Device5</b> (Train)", table_cell_bold),
+            Paragraph("<b>Device_3</b> (Train Cohort)", table_cell_bold),
+            Paragraph("0.1642 A", table_cell),
+            Paragraph("0.1610 A", table_cell),
+            Paragraph("[+0.1110, +0.2110 A]", table_cell),
+            Paragraph("0.0032 A", table_cell),
+            Paragraph("<font color='#E11D48'><b>RECOMMEND_REJECT</b></font>", table_cell),
+            Paragraph("Incorporates Device3/3b; severe thermal leakage surge (+113.1%).", table_cell)
+        ],
+        [
+            Paragraph("<b>Device_5</b> (Train Cohort)", table_cell_bold),
             Paragraph("0.0830 A", table_cell),
-            Paragraph("0.1049 A", table_cell),
-            Paragraph("[+0.0549, +0.1549 A]", table_cell),
-            Paragraph("0.0219 A", table_cell),
+            Paragraph("0.0910 A", table_cell),
+            Paragraph("[+0.0410, +0.1410 A]", table_cell),
+            Paragraph("0.0080 A", table_cell),
             Paragraph("<font color='#D97706'><b>REVIEW</b></font>", table_cell),
             Paragraph("Borderline slope near threshold; routed to human QA inspector.", table_cell)
-        ],
-        [
-            Paragraph("<b>Device2</b> (Train)", table_cell_bold),
-            Paragraph("0.0974 A", table_cell),
-            Paragraph("0.1031 A", table_cell),
-            Paragraph("[+0.0531, +0.1531 A]", table_cell),
-            Paragraph("0.0057 A", table_cell),
-            Paragraph("<font color='#0F766E'><b>PASS</b></font>", table_cell),
-            Paragraph("Operating nominally within expected screening bounds.", table_cell)
-        ],
-        [
-            Paragraph("<b>Device2b</b> (Val)", table_cell_bold),
-            Paragraph("0.2039 A", table_cell),
-            Paragraph("0.1599 A", table_cell),
-            Paragraph("[+0.1099, +0.2099 A]", table_cell),
-            Paragraph("0.0440 A", table_cell),
-            Paragraph("<font color='#0F766E'><b>PASS</b></font>", table_cell),
-            Paragraph("Stable high-bias trajectory matching reference cohort.", table_cell)
-        ],
-        [
-            Paragraph("<b>Device3</b> (Train)", table_cell_bold),
-            Paragraph("0.0996 A", table_cell),
-            Paragraph("0.1069 A", table_cell),
-            Paragraph("[+0.0569, +0.1569 A]", table_cell),
-            Paragraph("0.0073 A", table_cell),
-            Paragraph("<font color='#0F766E'><b>PASS</b></font>", table_cell),
-            Paragraph("Nominal aging trajectory, peer deviation Z-score = 0.29&sigma;.", table_cell)
-        ],
-        [
-            Paragraph("<b>Device4</b> (Train)", table_cell_bold),
-            Paragraph("0.1101 A", table_cell),
-            Paragraph("0.1092 A", table_cell),
-            Paragraph("[+0.0592, +0.1592 A]", table_cell),
-            Paragraph("0.0009 A", table_cell),
-            Paragraph("<font color='#0F766E'><b>PASS</b></font>", table_cell),
-            Paragraph("Extremely stable nominal trajectory; zero drift acceleration.", table_cell)
         ]
     ]
-    nasa_table = Table(nasa_rows, colWidths=[70, 52, 60, 85, 45, 52, 140])
+    nasa_table = Table(nasa_rows, colWidths=[90, 48, 55, 85, 42, 60, 110])
     nasa_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), c_teal),
         ('TEXTCOLOR', (0,0), (-1,0), colors.white),
@@ -410,7 +383,7 @@ def build_pdf(filename="docs/SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf"):
     # Add NASA GPR plot if exists
     gpr_plot_path = "results/NASA_GPR_forecast_evaluation.png"
     if os.path.exists(gpr_plot_path):
-        story.append(Paragraph("<b>Figure 1: Authentic NASA GPR 168h Forecast on Held-Out Test Hardware (Device3b & 4b)</b>", ParagraphStyle('Cap', fontName='Helvetica-Oblique', fontSize=8, textColor=c_muted, spaceAfter=4)))
+        story.append(Paragraph("<b>Figure 1: Authentic NASA GPR 168h Forecast on Held-Out Test Physical Device (Device_4)</b>", ParagraphStyle('Cap', fontName='Helvetica-Oblique', fontSize=8, textColor=c_muted, spaceAfter=4)))
         story.append(Image(gpr_plot_path, width=490, height=135))
         story.append(Spacer(1, 10))
 
@@ -420,9 +393,12 @@ def build_pdf(filename="docs/SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf"):
     # 4. In-Depth: Dataset D2 Frozen Isolation Forest
     story.append(Paragraph("4. Module A: Dataset D2 Frozen Isolation Forest Benchmark", h1_style))
     story.append(Paragraph(
-        "Evaluated on 174 MaterialIDs across 15 discrete HEMT lots. 19 noisy acceleration features were ablated, leaving "
+        "Evaluated on 174 untouched held-out MaterialIDs (clean test split is_test == 1). 19 noisy acceleration features were ablated, leaving "
         "<b>156 verified features</b>. The validation threshold (&tau; = 0.393578) caught 51 of 53 real defects (96.23% Recall) "
-        "with an escape rate of only 3.77%, well beneath the aerospace limit of 5%.",
+        "with an escape rate of only 3.77%, well beneath the aerospace limit of 5%. "
+        "<b>Trajectory Forecasting Note:</b> Dataset D2 contains only 2 measurement checkpoints (pre/post burn-in). "
+        "In strict compliance with Section 25.4, GPR trajectory forecasting is formally suppressed "
+        "(forecast_status: <code>unavailable_insufficient_history</code>) to prevent speculative extrapolation.",
         body_style
     ))
 
