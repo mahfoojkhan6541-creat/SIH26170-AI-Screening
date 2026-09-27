@@ -29,6 +29,21 @@ function setCustomUploadedDataset(data) {
   }
 }
 
+window.clearCustomUploadedDataset = function() {
+  localStorage.removeItem('isro_custom_dataset');
+  if (getActiveDatasetKey() === 'CUSTOM') {
+    setActiveDatasetKey('D2');
+  }
+  const pill = document.getElementById('pill-CUSTOM');
+  if (pill) pill.remove();
+  showToast("Uploaded test dataset cleared. Switched to Dataset D2 baseline.", "info");
+  if (typeof handleDatasetSwitch === 'function') {
+    handleDatasetSwitch('D2');
+  } else {
+    location.reload();
+  }
+};
+
 function getDatasetComponents(key) {
   let base = [];
   if (key === 'CUSTOM') {
@@ -107,22 +122,30 @@ function syncHeaderRunStatus(key) {
 
   // If a custom dataset is uploaded, ensure the custom switcher pill is visible in #datasetSwitcher
   const switcher = document.getElementById('datasetSwitcher');
-  if (switcher && custom && !document.getElementById('pill-CUSTOM')) {
-    const btn = document.createElement('button');
-    btn.className = 'dataset-pill';
-    btn.id = 'pill-CUSTOM';
-    btn.onclick = () => {
-      if (typeof handleDatasetSwitch === 'function') handleDatasetSwitch('CUSTOM');
-      else {
-        setActiveDatasetKey('CUSTOM');
-        location.reload();
+  if (switcher) {
+    let btn = document.getElementById('pill-CUSTOM');
+    if (custom) {
+      if (!btn) {
+        btn = document.createElement('button');
+        btn.className = 'dataset-pill';
+        btn.id = 'pill-CUSTOM';
+        btn.onclick = () => {
+          if (typeof handleDatasetSwitch === 'function') handleDatasetSwitch('CUSTOM');
+          else {
+            setActiveDatasetKey('CUSTOM');
+            location.reload();
+          }
+        };
+        switcher.appendChild(btn);
       }
-    };
-    btn.innerHTML = `
-      <span class="pill-dot"></span>
-      <span id="pillCustomText">Uploaded: ${custom.dataset_name || 'Custom Batch'}</span>
-    `;
-    switcher.appendChild(btn);
+      btn.innerHTML = `
+        <span class="pill-dot"></span>
+        <span id="pillCustomText">Uploaded: ${custom.dataset_name || 'Custom Batch'}</span>
+        <span class="pill-clear-btn" onclick="event.stopPropagation(); clearCustomUploadedDataset();" title="Remove uploaded dataset" style="margin-left:6px; font-weight:800; font-size:13px; opacity:0.65; cursor:pointer;">&times;</span>
+      `;
+    } else if (btn) {
+      btn.remove();
+    }
   }
 
   // Update telemetry details
