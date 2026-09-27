@@ -1117,8 +1117,24 @@ function renderFabricationLotChart(containerId, data, options = {}) {
     window._onLotChartLotClick = options.onLotSelect;
   }
 
+  // Handle completely empty dataset (e.g. before Live Simulation starts)
+  if (!data || data.length === 0) {
+    container.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:140px;color:#64748B;font-size:12.5px;text-align:center;padding:24px;background:#F8FAFC;border:1px dashed #CBD5E1;border-radius:6px;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" style="margin-bottom:8px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span style="font-weight:600;color:#475569;font-size:13px;">No stream components loaded yet.</span>
+        <span style="font-size:11.5px;color:#94A3B8;margin-top:5px;max-width:540px;">Click the <strong>Live Simulation</strong> button at the top right to start streaming burn-in chamber telemetry packets.</span>
+      </div>
+    `;
+    const totalBatchesEl = document.getElementById('lotTotalBatchesVal');
+    const avgYieldEl = document.getElementById('lotAvgYieldVal');
+    if (totalBatchesEl) totalBatchesEl.innerText = "--";
+    if (avgYieldEl) avgYieldEl.innerText = "--";
+    return;
+  }
+
   // Detect genuine lot metadata
-  const hasRealLots = (data || []).some(item => {
+  const hasRealLots = data.some(item => {
     const rawLot = (item.lot_id !== undefined && item.lot_id !== null ? item.lot_id : item.lot);
     if (!rawLot) return false;
     const s = String(rawLot).trim();
