@@ -153,7 +153,21 @@ function syncHeaderRunStatus(key) {
   }
   if (runIdEl) runIdEl.innerText = runId;
   if (runModelEl) runModelEl.innerText = modelDesc;
-  if (telemetryBadge) telemetryBadge.innerText = badgeText;
+  if (telemetryBadge) {
+    if (window.ISRO_SIMULATION && window.ISRO_SIMULATION.active) {
+      telemetryBadge.innerText = `STREAMING (+${window.ISRO_SIMULATION.streamedItems.length})`;
+      telemetryBadge.style.color = '#38BDF8';
+      telemetryBadge.style.borderColor = 'rgba(56, 189, 248, 0.4)';
+    } else if (window.ISRO_SIMULATION && window.ISRO_SIMULATION.streamedItems && window.ISRO_SIMULATION.streamedItems.length > 0) {
+      telemetryBadge.innerText = `PAUSED (+${window.ISRO_SIMULATION.streamedItems.length})`;
+      telemetryBadge.style.color = '#F59E0B';
+      telemetryBadge.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+    } else {
+      telemetryBadge.innerText = badgeText;
+      telemetryBadge.style.color = '';
+      telemetryBadge.style.borderColor = '';
+    }
+  }
 
   // Update switcher pills active class
   document.querySelectorAll('.dataset-pill').forEach(btn => {
@@ -161,6 +175,11 @@ function syncHeaderRunStatus(key) {
   });
   const activeBtn = document.getElementById(`pill-${key}`);
   if (activeBtn) activeBtn.classList.add('active');
+
+  // Synchronize Live Simulation Button state with restored simulation session
+  if (typeof updateSimButtonsUi === 'function') {
+    updateSimButtonsUi(window.ISRO_SIMULATION && window.ISRO_SIMULATION.active);
+  }
 }
 
 // 3. TOAST NOTIFICATIONS
@@ -1469,12 +1488,40 @@ window.addEventListener('resize', () => {
 // =============================================================
 // 7. LIVE BURN-IN CHAMBER TELEMETRY SIMULATION ENGINE
 // =============================================================
+function loadSimulationFromStorage() {
+  try {
+    const active = localStorage.getItem('isro_sim_active') === 'true';
+    const rawItems = localStorage.getItem('isro_sim_items');
+    const items = rawItems ? JSON.parse(rawItems) : [];
+    const tick = parseInt(localStorage.getItem('isro_sim_tick') || '0', 10);
+    return {
+      active: active,
+      streamedItems: Array.isArray(items) ? items : [],
+      tickCount: isNaN(tick) ? 0 : tick
+    };
+  } catch (e) {
+    return { active: false, streamedItems: [], tickCount: 0 };
+  }
+}
+
+function saveSimulationToStorage() {
+  try {
+    if (!window.ISRO_SIMULATION) return;
+    localStorage.setItem('isro_sim_active', window.ISRO_SIMULATION.active ? 'true' : 'false');
+    localStorage.setItem('isro_sim_items', JSON.stringify((window.ISRO_SIMULATION.streamedItems || []).slice(0, 150)));
+    localStorage.setItem('isro_sim_tick', String(window.ISRO_SIMULATION.tickCount || 0));
+  } catch (e) {
+    console.warn("Could not save simulation state to localStorage:", e);
+  }
+}
+
+const _initialSimState = loadSimulationFromStorage();
 window.ISRO_SIMULATION = {
   active: false,
   timer: null,
   intervalMs: 1400,
-  streamedItems: [],
-  tickCount: 0
+  streamedItems: _initialSimState.streamedItems,
+  tickCount: _initialSimState.tickCount
 };
 
 const SIM_PARAM_POOL = [
@@ -1565,6 +1612,25 @@ function generateSimulatedComponent(seq) {
   };
 }
 
+function updateSimBadge() {
+  const badge = document.getElementById('telemetryStatusBadge');
+  if (!badge) return;
+  const count = (window.ISRO_SIMULATION && window.ISRO_SIMULATION.streamedItems) ? window.ISRO_SIMULATION.streamedItems.length : 0;
+  if (window.ISRO_SIMULATION && window.ISRO_SIMULATION.active) {
+    badge.innerText = `STREAMING (+${count})`;
+    badge.style.color = '#38BDF8';
+    badge.style.borderColor = 'rgba(56, 189, 248, 0.4)';
+  } else if (count > 0) {
+    badge.innerText = `PAUSED (+${count})`;
+    badge.style.color = '#F59E0B';
+    badge.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+  } else {
+    badge.innerText = 'BENCHMARK EVAL';
+    badge.style.color = '';
+    badge.style.borderColor = '';
+  }
+}
+
 function toggleLiveSimulation() {
   if (window.ISRO_SIMULATION.active) {
     pauseLiveSimulation();
@@ -1575,7 +1641,9 @@ function toggleLiveSimulation() {
 
 function startLiveSimulation() {
   window.ISRO_SIMULATION.active = true;
+  saveSimulationToStorage();
   updateSimButtonsUi(true);
+  updateSimBadge();
 
   showToast("🚀 Live Burn-In Simulation Started • Ingesting 168h Chamber Telemetry...", "success");
 
@@ -1583,6 +1651,9 @@ function startLiveSimulation() {
   simulateNextComponent();
 
   // Then tick every interval
+  if (window.ISRO_SIMULATION.timer) {
+    clearInterval(window.ISRO_SIMULATION.timer);
+  }
   window.ISRO_SIMULATION.timer = setInterval(() => {
     simulateNextComponent();
   }, window.ISRO_SIMULATION.intervalMs);
@@ -1594,7 +1665,9 @@ function pauseLiveSimulation() {
     clearInterval(window.ISRO_SIMULATION.timer);
     window.ISRO_SIMULATION.timer = null;
   }
+  saveSimulationToStorage();
   updateSimButtonsUi(false);
+  updateSimBadge();
   showToast(`Simulation paused. ${window.ISRO_SIMULATION.streamedItems.length} live parts ingested.`, "info");
 }
 
@@ -1606,8 +1679,10 @@ function resetLiveSimulation() {
   }
   window.ISRO_SIMULATION.streamedItems = [];
   window.ISRO_SIMULATION.tickCount = 0;
+  saveSimulationToStorage();
 
   updateSimButtonsUi(false, true);
+  updateSimBadge();
   refreshCurrentPageAfterSim();
   showToast("Live simulation reset to baseline frozen dataset.", "info");
 }
@@ -1616,12 +1691,13 @@ function simulateNextComponent() {
   window.ISRO_SIMULATION.tickCount++;
   const comp = generateSimulatedComponent(window.ISRO_SIMULATION.tickCount);
   window.ISRO_SIMULATION.streamedItems.unshift(comp);
+  if (window.ISRO_SIMULATION.streamedItems.length > 150) {
+    window.ISRO_SIMULATION.streamedItems.length = 150;
+  }
+  saveSimulationToStorage();
 
   // Update telemetry status badge in header
-  const badge = document.getElementById('telemetryStatusBadge');
-  if (badge) {
-    badge.innerText = `STREAMING (+${window.ISRO_SIMULATION.streamedItems.length})`;
-  }
+  updateSimBadge();
 
   // If Reject (Critical Defect Intercepted), trigger aerospace alert toast!
   if (comp.disposition === 'REJECT') {
@@ -1633,6 +1709,14 @@ function simulateNextComponent() {
 }
 
 function refreshCurrentPageAfterSim(latestComp) {
+  // Update sidebar count chip across all pages
+  const sideChip = document.getElementById('sidebarScreeningChip');
+  if (sideChip) {
+    const curKey = (typeof currentDataset !== 'undefined') ? currentDataset : getActiveDatasetKey();
+    const totalCount = getDatasetComponents(curKey).length;
+    sideChip.innerText = String(totalCount);
+  }
+
   // If Overview Page:
   if (typeof renderOverview === 'function') {
     renderOverview();
@@ -1644,7 +1728,7 @@ function refreshCurrentPageAfterSim(latestComp) {
     if (typeof updateFilterPillCounts === 'function') updateFilterPillCounts();
     if (typeof renderCurrentLotChart === 'function') renderCurrentLotChart();
 
-    // Pulse highlight on the new row
+    // Pulse highlight on the new row if present
     setTimeout(() => {
       const tbody = document.getElementById('screeningTableBody');
       if (tbody && tbody.firstElementChild) {
@@ -1654,8 +1738,10 @@ function refreshCurrentPageAfterSim(latestComp) {
   }
 
   // If Diagnostics Page:
-  if (document.getElementById('cmTN') && typeof updateDiagnosticsForSim === 'function') {
+  if (typeof updateDiagnosticsForSim === 'function') {
     updateDiagnosticsForSim();
+  } else if (typeof renderDiagnostics === 'function') {
+    renderDiagnostics();
   }
 }
 
@@ -1676,12 +1762,87 @@ function updateSimButtonsUi(isActive, isReset = false) {
       if (btnText) btnText.innerText = 'Live Simulation';
       if (resetBtn) resetBtn.style.display = 'none';
       const badge = document.getElementById('telemetryStatusBadge');
-      if (badge) badge.innerText = 'BENCHMARK EVAL';
+      if (badge) {
+        badge.innerText = 'BENCHMARK EVAL';
+        badge.style.color = '';
+        badge.style.borderColor = '';
+      }
     } else {
-      if (btnText) btnText.innerText = 'Resume Stream';
-      if (resetBtn) resetBtn.style.display = 'inline-flex';
+      const hasItems = window.ISRO_SIMULATION && window.ISRO_SIMULATION.streamedItems && window.ISRO_SIMULATION.streamedItems.length > 0;
+      if (btnText) {
+        btnText.innerText = hasItems ? 'Resume Stream' : 'Live Simulation';
+      }
+      if (resetBtn) {
+        resetBtn.style.display = hasItems ? 'inline-flex' : 'none';
+      }
     }
   }
+}
+
+function initSimulationLifecycle() {
+  const saved = loadSimulationFromStorage();
+  window.ISRO_SIMULATION.streamedItems = saved.streamedItems;
+  window.ISRO_SIMULATION.tickCount = saved.tickCount;
+
+  if (saved.active) {
+    window.ISRO_SIMULATION.active = true;
+    updateSimButtonsUi(true);
+    updateSimBadge();
+
+    // Auto-resume stream interval timer across page navigations
+    if (!window.ISRO_SIMULATION.timer) {
+      window.ISRO_SIMULATION.timer = setInterval(() => {
+        simulateNextComponent();
+      }, window.ISRO_SIMULATION.intervalMs);
+    }
+  } else if (saved.streamedItems.length > 0) {
+    window.ISRO_SIMULATION.active = false;
+    updateSimButtonsUi(false);
+    updateSimBadge();
+  }
+}
+
+// Automatically sync across browser tabs/windows
+window.addEventListener('storage', (e) => {
+  if (e.key === 'isro_sim_active') {
+    if (e.newValue === 'true' && !window.ISRO_SIMULATION.active) {
+      window.ISRO_SIMULATION.active = true;
+      const saved = loadSimulationFromStorage();
+      window.ISRO_SIMULATION.streamedItems = saved.streamedItems;
+      window.ISRO_SIMULATION.tickCount = saved.tickCount;
+      updateSimButtonsUi(true);
+      updateSimBadge();
+      if (!window.ISRO_SIMULATION.timer) {
+        window.ISRO_SIMULATION.timer = setInterval(() => {
+          simulateNextComponent();
+        }, window.ISRO_SIMULATION.intervalMs);
+      }
+    } else if (e.newValue === 'false' && window.ISRO_SIMULATION.active) {
+      window.ISRO_SIMULATION.active = false;
+      if (window.ISRO_SIMULATION.timer) {
+        clearInterval(window.ISRO_SIMULATION.timer);
+        window.ISRO_SIMULATION.timer = null;
+      }
+      updateSimButtonsUi(false);
+      updateSimBadge();
+    }
+  } else if (e.key === 'isro_sim_items') {
+    try {
+      const items = JSON.parse(e.newValue || '[]');
+      if (Array.isArray(items)) {
+        window.ISRO_SIMULATION.streamedItems = items;
+        refreshCurrentPageAfterSim();
+        updateSimBadge();
+      }
+    } catch (_) {}
+  }
+});
+
+// Run lifecycle hook immediately when document is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initSimulationLifecycle);
+} else {
+  initSimulationLifecycle();
 }
 
 function showSimAlertToast(comp) {
@@ -1705,10 +1866,10 @@ function showSimAlertToast(comp) {
       <div style="flex:1;">
         <div style="font-weight:800; font-size:11.5px; color:#FEE2E2; letter-spacing:0.02em;">CRITICAL DEFECT INTERCEPTED</div>
         <div style="font-size:11px; color:#FFFFFF; margin-top:2px;">
-          Part <strong>${comp.id}</strong> &bull; Score: <strong style="color:#FCA5A5;">${comp.score.toFixed(4)}</strong> &bull; ${comp.lot}
+          Part <strong>${comp.id}</strong> &bull; Score: <strong style="color:#FCA5A5;">${comp.score.toFixed(4)}</strong>
         </div>
         <div style="margin-top:6px;">
-          <button onclick="pauseLiveSimulation(); navigateOrInspectComponent('${comp.id}'); this.closest('.toast-message').remove();" 
+          <button onclick="navigateOrInspectComponent('${comp.id}'); this.closest('.toast-message').remove();" 
                   style="background:#EF4444; border:none; color:#FFFFFF; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:4px; cursor:pointer;">
             Inspect Part &rarr;
           </button>
