@@ -1,0 +1,16 @@
+# Vercel Frontend Deployment Ignore List
+# The Python backend runs on Render, so Vercel builds only the static dashboard
+requirements.txt
+Procfile
+src/
+models/
+data/
+scripts/
+tests/
+configs/
+venv/
+*.py
+*.pkl
+*.db
+*.csv
+*.mat
