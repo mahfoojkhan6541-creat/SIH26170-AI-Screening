@@ -1,0 +1,30 @@
+{
+  "outputDirectory": "dashboard",
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://sih26170-backend.onrender.com/api/:path*"
+    },
+    {
+      "source": "/audit/:path*",
+      "destination": "https://sih26170-backend.onrender.com/audit/:path*"
+    },
+    {
+      "source": "/",
+      "destination": "/overview.html"
+    },
+    {
+      "source": "/overview",
+      "destination": "/overview.html"
+    },
+    {
+      "source": "/screening",
+      "destination": "/screening.html"
+    },
+    {
+      "source": "/diagnostics",
+      "destination": "/diagnostics.html"
+    }
+  ]
+}
