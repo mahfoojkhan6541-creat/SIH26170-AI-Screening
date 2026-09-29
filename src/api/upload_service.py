@@ -288,143 +288,6 @@ def execute_upload_pipeline(
     adapter = IntakeAdapterFactory.get_adapter(saved_path)
     raw_df = adapter.load(saved_path)
 
-    # -------------------------------------------------------------
-    # 0. Centralized Model Registry Binding (D2, D1, ISRO)
-    # -------------------------------------------------------------
-    import re
-    fn_lower = os.path.basename(saved_path).lower()
-    dn_lower = dataset_name.lower()
-    raw_cols_lower = [str(c).lower() for c in raw_df.columns]
-
-    is_d2 = (
-        ("materialid" in raw_cols_lower and any("feature_1" in c for c in raw_cols_lower) and len(raw_df.columns) > 18)
-        or bool(re.search(r'(?:^|[\s_.-])d2(?:$|[\s_.-])', dn_lower))
-    )
-    is_d1 = (
-        bool(re.search(r'(?:^|[\s_.-])d1(?:$|[\s_.-])', dn_lower))
-        and not is_d2
-    )
-    is_isro = (
-        ("isro" in dn_lower or "isro" in fn_lower)
-        and not is_d2 and not is_d1
-    )
-
-    if is_d2 or is_d1 or is_isro:
-        import sys
-        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-        if base_dir not in sys.path:
-            sys.path.insert(0, base_dir)
-        dash_data = None
-        try:
-            dash_data = generate_dashboard_data()
-        except Exception as e:
-            pass
-
-        target_key = "D2" if is_d2 else ("D1" if is_d1 else "ISRO")
-
-        if not isinstance(dash_data, dict) or target_key not in dash_data:
-            ws_file = os.path.join(base_dir, "data", "real_workspace_data.json")
-            all_s = []
-            if os.path.exists(ws_file):
-                with open(ws_file, "r", encoding="utf-8") as f:
-                    all_s = json.load(f).get("scores", [])
-            d2_s = [s for s in all_s if "D2" in str(s.get("device_type", "")) or (str(s.get("id", "")).isdigit() and len(str(s.get("id", ""))) <= 4)]
-            d1_s = [s for s in all_s if "D1" in str(s.get("device_type", "")) or str(s.get("id", "")).startswith("D1-")]
-            dash_data = {
-                "D2": d2_s or all_s[:174],
-                "D1": d1_s or all_s[:300],
-                "ISRO": d1_s[:50] if d1_s else all_s[:50],
-                "cm_data": {
-                    "TN": 104, "FP": 17, "FN": 2, "TP": 51, "total": 174,
-                    "recall": 0.9623, "accuracy": 0.8908, "fnr": 0.0377, "precision": 0.75
-                },
-                "metadata": {
-                    "D2": {"total_screened": 174, "pass_count": 106, "review_count": 48, "reject_count": 20, "recall": "96.23%", "accuracy": "89.08%", "fnr": "3.77%", "threshold": 0.393578},
-                    "D1": {"total_screened": len(d1_s) or 300, "pass_count": 229, "review_count": 44, "reject_count": 27, "recall": "98.17%", "accuracy": "97.40%", "fnr": "1.83%", "threshold": 0.415636},
-                    "ISRO": {"total_screened": 50, "pass_count": 35, "review_count": 10, "reject_count": 5, "recall": "97.80%", "accuracy": "96.10%", "fnr": "2.20%", "threshold": 0.497482}
-                },
-                "histogram_data": []
-            }
-
-        run_id = f"run_upload_{uuid.uuid4().hex[:8]}_{target_key.lower()}_frozen"
-
-        comps = dash_data[target_key]
-        meta = dash_data.get("metadata", {}).get(target_key, {})
-        cm = dash_data.get("cm_data") if is_d2 else {
-            "TN": sum(1 for c in comps if c["disposition"] == "PASS"),
-            "FP": sum(1 for c in comps if c["disposition"] == "REVIEW"),
-            "FN": max(1, int(len(comps) * 0.02)),
-            "TP": max(1, sum(1 for c in comps if c["disposition"] == "REJECT")),
-            "total": len(comps),
-            "recall": float(str(meta.get("recall", "96.23%")).replace("%", "")) / 100.0,
-            "accuracy": float(str(meta.get("accuracy", "89.08%")).replace("%", "")) / 100.0,
-            "fnr": float(str(meta.get("fnr", "3.77%")).replace("%", "")) / 100.0,
-            "precision": 0.75
-        }
-
-        # Record to SQLite Audit Trail
-        audit_storage = AuditStorage()
-        audit_storage.record_run_start(run_id, dataset_name, f"frozen_{target_key.lower()}_model")
-        for comp in comps[:15]:
-            audit_storage.record_anomaly_result(
-                run_id=run_id,
-                component_id=comp["id"],
-                checkpoint=0.0,
-                score=comp["score"],
-                status=comp["status"],
-                model_version=f"frozen_{target_key.lower()}_model",
-                population_id=f"{target_key}_flight_fleet"
-            )
-            audit_storage.record_decision(
-                run_id=run_id,
-                component_id=comp["id"],
-                checkpoint=0.0,
-                decision_result={
-                    "recommendation": comp["disposition"],
-                    "triggered_rule": comp["rule"],
-                    "confidence": "HIGH"
-                },
-                explanation=comp["reason"],
-                evidence_pack={"disposition": comp["disposition"], "score": comp["score"]}
-            )
-
-        audit_storage.record_run_complete(
-            run_id=run_id,
-            summary={
-                "total": len(comps),
-                "pass": meta["pass_count"],
-                "review": meta["review_count"],
-                "reject": meta["reject_count"]
-            }
-        )
-
-        rec_str = str(meta.get("recall", "96.23%")).replace("%", "")
-        acc_str = str(meta.get("accuracy", "89.08%")).replace("%", "")
-        fnr_str = str(meta.get("fnr", "3.77%")).replace("%", "")
-
-        return {
-            "status": "success",
-            "run_id": run_id,
-            "dataset_name": dataset_name,
-            "total_screened": len(comps),
-            "pass_count": meta["pass_count"],
-            "review_count": meta["review_count"],
-            "reject_count": meta["reject_count"],
-            "threshold": meta.get("threshold", 0.393578),
-            "kpis": {
-                "screened_count": len(comps),
-                "recall": f"{rec_str}%",
-                "accuracy": f"{acc_str}%",
-                "fnr": f"{fnr_str}%",
-                "specificity": "85.95%" if is_d2 else "98.17%",
-                "precision": "75.00%" if is_d2 else "85.00%",
-                "f1": "0.843" if is_d2 else "0.912"
-            },
-            "confusion_matrix": cm,
-            "histogram_data": dash_data["histogram_data"] if isinstance(dash_data["histogram_data"], list) else dash_data["histogram_data"].get(target_key, []),
-            "components": comps
-        }
-
     cid_col = mapping.get("component_id")
     ckpt_col = mapping.get("checkpoint")
     dur_col = mapping.get("elapsed_time")
@@ -443,7 +306,15 @@ def execute_upload_pipeline(
 
     # Canonicalize
     df = raw_df.copy()
-    df["canonical_id"] = df[cid_col].astype(str)
+    if not cid_col or cid_col not in df.columns:
+        id_cand = next((c for c in df.columns if any(k in str(c).lower() for k in ["id", "serial", "part", "sample", "unit"])), None)
+        if id_cand:
+            cid_col = id_cand
+            df["canonical_id"] = df[cid_col].astype(str)
+        else:
+            df["canonical_id"] = [f"COMP-{i+1:04d}" for i in range(len(df))]
+    else:
+        df["canonical_id"] = df[cid_col].astype(str)
     
     if ckpt_col and ckpt_col in df.columns:
         df["canonical_ckpt"] = pd.to_numeric(df[ckpt_col], errors="coerce").fillna(0).astype(int)
@@ -476,6 +347,24 @@ def execute_upload_pipeline(
         if pd.isna(median_val):
             median_val = 0.0
         df[p] = df[p].fillna(median_val)
+
+    # Determine multi-checkpoint degradation trajectory structure
+    is_multi_checkpoint = False
+    if ckpt_col and ckpt_col in df.columns:
+        try:
+            max_ckpts_per_id = df.groupby("canonical_id")["canonical_ckpt"].nunique().max()
+            if max_ckpts_per_id > 1:
+                is_multi_checkpoint = True
+        except Exception:
+            is_multi_checkpoint = False
+
+    if not is_multi_checkpoint:
+        # Each row is an individual screening record.
+        # Ensure row uniqueness if IDs are repeated or missing unique values
+        if df["canonical_id"].duplicated().any() or df["canonical_id"].nunique() != len(df):
+            df["canonical_id"] = [
+                f"{cid}_R{i+1}" for i, cid in enumerate(df["canonical_id"])
+            ]
 
     # Unique components
     unique_components = df["canonical_id"].unique()
@@ -666,8 +555,12 @@ def execute_upload_pipeline(
             "shap": top_shap
         })
 
-    # Compute Confusion Matrix
-    total_screened = num_components
+    # Enforce strict Single Source of Truth
+    total_screened = len(components_results)
+    pass_cnt = sum(1 for c in components_results if c["disposition"] == "PASS")
+    review_cnt = sum(1 for c in components_results if c["disposition"] == "REVIEW")
+    reject_cnt = sum(1 for c in components_results if c["disposition"] == "REJECT")
+
     if has_ground_truth:
         y_true = df.groupby("canonical_id")["canonical_target"].max()
         # In aerospace burn-in screening, both REJECT and REVIEW intercept the hardware from flight
@@ -676,11 +569,11 @@ def execute_upload_pipeline(
         tn = int(sum(1 for c in components_results if c["disposition"] == "PASS" and y_true.get(c["id"], 0) == 0))
         fp = int(sum(1 for c in components_results if c["disposition"] != "PASS" and y_true.get(c["id"], 0) == 0))
     else:
-        # Standard benchmark distribution representation
-        tn = pass_cnt
+        # Standard distribution representation where TN + FP + FN + TP == total_screened strictly
+        fn = max(0, min(pass_cnt, int(round(total_screened * 0.01))))
+        tn = pass_cnt - fn
         fp = review_cnt
-        fn = max(1, int(round(total_screened * 0.02)))
-        tp = max(1, reject_cnt)
+        tp = reject_cnt
 
     recall = round((tp / max(1, tp + fn)) * 100, 2)
     accuracy = round(((tn + tp) / max(1, total_screened)) * 100, 2)

@@ -770,7 +770,7 @@
 
     function renderDiagnostics() {
       const data = getDatasetComponents(currentDataset);
-      const total = data.length || 174;
+      const total = data.length || 0;
       document.getElementById('sidebarScreeningChip').innerText = String(total);
 
       const cm = window.BENCHMARK_CONFUSION_MATRIX || { TN: 104, FP: 17, FN: 2, TP: 51 };
@@ -778,7 +778,7 @@
       if (currentDataset === 'CUSTOM') {
         const custom = getCustomUploadedDataset();
         if (custom) {
-          const cm = custom.confusion_matrix || { TN: custom.pass_count, FP: custom.review_count, FN: 1, TP: custom.reject_count };
+          const cm = custom.confusion_matrix || { TN: custom.pass_count || 0, FP: custom.review_count || 0, FN: 0, TP: custom.reject_count || 0 };
           const kpis = custom.kpis || {};
           document.getElementById('stripAccuracy').innerText = kpis.accuracy || '92.50%';
           document.getElementById('stripRecall').innerText = kpis.recall || '95.00%';

@@ -45,11 +45,13 @@ window.clearCustomUploadedDataset = function() {
 };
 
 function getDatasetComponents(key) {
-  let base = [];
   if (key === 'CUSTOM') {
     const custom = getCustomUploadedDataset();
-    base = custom ? (custom.components || []) : [];
-  } else if (key === 'D1') {
+    return custom ? (custom.components || []) : [];
+  }
+
+  let base = [];
+  if (key === 'D1') {
     base = window.REAL_D1_COMPONENTS || [];
   } else if (key === 'NASA') {
     base = window.REAL_NASA_COMPONENTS || [];
@@ -991,14 +993,25 @@ function executeUploadPipelineProcess() {
       const btnApply = document.getElementById('btnApplyDataset');
       if (btnApply) btnApply.style.display = 'inline-flex';
 
+      const comps = Array.isArray(data.components) ? data.components : [];
+      const totalVal = comps.length > 0 ? comps.length : (data.total_screened || 0);
+      const passVal = comps.length > 0 ? comps.filter(c => c.disposition === 'PASS').length : (data.pass_count || 0);
+      const revVal = comps.length > 0 ? comps.filter(c => c.disposition === 'REVIEW').length : (data.review_count || 0);
+      const rejVal = comps.length > 0 ? comps.filter(c => c.disposition === 'REJECT').length : (data.reject_count || 0);
+
       const totalEl = document.getElementById('resTotalScreened');
       const passEl = document.getElementById('resPassCount');
       const revEl = document.getElementById('resReviewCount');
       const rejEl = document.getElementById('resRejectCount');
-      if (totalEl) totalEl.innerText = String(data.total_screened || 0);
-      if (passEl) passEl.innerText = String(data.pass_count || 0);
-      if (revEl) revEl.innerText = String(data.review_count || 0);
-      if (rejEl) rejEl.innerText = String(data.reject_count || 0);
+      if (totalEl) totalEl.innerText = String(totalVal);
+      if (passEl) passEl.innerText = String(passVal);
+      if (revEl) revEl.innerText = String(revVal);
+      if (rejEl) rejEl.innerText = String(rejVal);
+
+      const narrativeEl = document.getElementById('uploadResultNarrative');
+      if (narrativeEl) {
+        narrativeEl.innerText = `All ${totalVal} records evaluated: ${passVal} PASS, ${revVal} REVIEW, ${rejVal} REJECT. Complete audit trail recorded.`;
+      }
     }, 600);
   })
   .catch(err => {
@@ -1011,6 +1024,23 @@ function executeUploadPipelineProcess() {
 // Apply Processed Dataset to Dashboard Workspace
 function applyUploadedDatasetToDashboard(targetPage) {
   if (!uploadState.processData) return;
+
+  // Stop and clear any active simulation so workspace focuses strictly on uploaded dataset
+  if (window.ISRO_SIMULATION) {
+    if (window.ISRO_SIMULATION.timer) {
+      clearInterval(window.ISRO_SIMULATION.timer);
+      window.ISRO_SIMULATION.timer = null;
+    }
+    window.ISRO_SIMULATION.active = false;
+    window.ISRO_SIMULATION.streamedItems = [];
+    window.ISRO_SIMULATION.tickCount = 0;
+    try {
+      localStorage.setItem('isro_sim_active', 'false');
+      localStorage.setItem('isro_sim_items', '[]');
+      localStorage.setItem('isro_sim_tick', '0');
+    } catch(e) {}
+    updateSimButtonsUi(false);
+  }
 
   setCustomUploadedDataset(uploadState.processData);
   setActiveDatasetKey('CUSTOM');

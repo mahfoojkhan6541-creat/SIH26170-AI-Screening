@@ -742,24 +742,24 @@
 
     function renderOverview() {
       const data = getDatasetComponents(currentDataset);
-      const total = data.length || 174;
+      const total = data.length || 0;
       document.getElementById('sidebarScreeningChip').innerText = String(total);
       document.getElementById('dispositionTotalTag').innerText = `${total} Evaluated`;
 
-      const pass = data.filter(d => d.disposition === 'PASS').length || (currentDataset === 'D2' ? 106 : Math.round(total * 0.7));
-      const review = data.filter(d => d.disposition === 'REVIEW').length || (currentDataset === 'D2' ? 48 : Math.round(total * 0.2));
-      const reject = data.filter(d => d.disposition === 'REJECT').length || (currentDataset === 'D2' ? 20 : total - pass - review);
+      const pass = data.filter(d => d.disposition === 'PASS').length;
+      const review = data.filter(d => d.disposition === 'REVIEW').length;
+      const reject = data.filter(d => d.disposition === 'REJECT').length;
 
       // Render KPIs
       if (currentDataset === 'CUSTOM') {
         const custom = getCustomUploadedDataset();
         const kpis = (custom && custom.kpis) || {};
-        document.getElementById('kpiScreenedCount').innerText = String((custom && custom.total_screened) || total);
+        document.getElementById('kpiScreenedCount').innerText = String(total);
         document.getElementById('kpi1Badge').innerText = 'Custom Dataset Evaluated';
         document.getElementById('kpi1Context').innerText = (custom && custom.dataset_name) || 'User Uploaded File';
 
         document.getElementById('kpiRecallRate').innerText = kpis.recall || '95.00%';
-        document.getElementById('kpi2Badge').innerHTML = `&uarr; ${(custom && custom.reject_count) || 0} Caught Anomalies`;
+        document.getElementById('kpi2Badge').innerHTML = `&uarr; ${reject} Caught Anomalies`;
         document.getElementById('kpi2Context').innerText = 'Isolation Forest Score';
 
         document.getElementById('kpiAccuracyRate').innerText = kpis.accuracy || '92.50%';
@@ -767,7 +767,7 @@
         document.getElementById('kpi3Context').innerText = 'Dynamic Model Inference';
 
         document.getElementById('kpiFnrRate').innerText = kpis.fnr || '2.50%';
-        document.getElementById('kpi4Badge').innerText = `Review Overkill: ${(custom && custom.review_count) || 0}`;
+        document.getElementById('kpi4Badge').innerText = `Review Overkill: ${review}`;
         document.getElementById('kpi4Context').innerText = 'Controlled Safety Margin';
       } else if (currentDataset === 'D2') {
         document.getElementById('kpiScreenedCount').innerText = '174';

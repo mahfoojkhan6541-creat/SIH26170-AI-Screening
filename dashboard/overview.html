@@ -754,12 +754,12 @@
       if (currentDataset === 'CUSTOM') {
         const custom = getCustomUploadedDataset();
         const kpis = (custom && custom.kpis) || {};
-        document.getElementById('kpiScreenedCount').innerText = String((custom && custom.total_screened) || total);
+        document.getElementById('kpiScreenedCount').innerText = String(total);
         document.getElementById('kpi1Badge').innerText = 'Custom Dataset Evaluated';
         document.getElementById('kpi1Context').innerText = (custom && custom.dataset_name) || 'User Uploaded File';
 
         document.getElementById('kpiRecallRate').innerText = kpis.recall || '95.00%';
-        document.getElementById('kpi2Badge').innerHTML = `&uarr; ${(custom && custom.reject_count) || 0} Caught Anomalies`;
+        document.getElementById('kpi2Badge').innerHTML = `&uarr; ${reject} Caught Anomalies`;
         document.getElementById('kpi2Context').innerText = 'Isolation Forest Score';
 
         document.getElementById('kpiAccuracyRate').innerText = kpis.accuracy || '92.50%';
@@ -767,7 +767,7 @@
         document.getElementById('kpi3Context').innerText = 'Dynamic Model Inference';
 
         document.getElementById('kpiFnrRate').innerText = kpis.fnr || '2.50%';
-        document.getElementById('kpi4Badge').innerText = `Review Overkill: ${(custom && custom.review_count) || 0}`;
+        document.getElementById('kpi4Badge').innerText = `Review Overkill: ${review}`;
         document.getElementById('kpi4Context').innerText = 'Controlled Safety Margin';
       } else if (currentDataset === 'D2') {
         document.getElementById('kpiScreenedCount').innerText = String(total);
@@ -821,13 +821,13 @@
 
       // Donut Stats Text
       document.getElementById('donutPassCount').innerText = String(pass);
-      document.getElementById('donutPassPct').innerText = ((pass / total) * 100).toFixed(1) + '%';
+      document.getElementById('donutPassPct').innerText = total > 0 ? ((pass / total) * 100).toFixed(1) + '%' : '0.0%';
 
       document.getElementById('donutReviewCount').innerText = String(review);
-      document.getElementById('donutReviewPct').innerText = ((review / total) * 100).toFixed(1) + '%';
+      document.getElementById('donutReviewPct').innerText = total > 0 ? ((review / total) * 100).toFixed(1) + '%' : '0.0%';
 
       document.getElementById('donutRejectCount').innerText = String(reject);
-      document.getElementById('donutRejectPct').innerText = ((reject / total) * 100).toFixed(1) + '%';
+      document.getElementById('donutRejectPct').innerText = total > 0 ? ((reject / total) * 100).toFixed(1) + '%' : '0.0%';
 
       renderDonutChart(pass, review, reject, total);
       renderLotBarGraph(data);
@@ -841,9 +841,10 @@
       const radius = (size - strokeW) / 2;
       const circumference = 2 * Math.PI * radius;
 
-      const pPass = pass / total;
-      const pReview = review / total;
-      const pReject = reject / total;
+      const safeTotal = total > 0 ? total : 1;
+      const pPass = total > 0 ? pass / safeTotal : 0;
+      const pReview = total > 0 ? review / safeTotal : 0;
+      const pReject = total > 0 ? reject / safeTotal : 0;
 
       const offsetPass = 0;
       const dashPass = pPass * circumference;
