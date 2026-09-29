@@ -590,7 +590,7 @@
           <span>Model Registry</span>
         </button>
 
-        <button class="nav-link-btn" onclick="exportCertifiedAuditCsv()">
+        <button class="nav-link-btn" onclick="exportCertifiedAuditCsv(event)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           <span>Audit Export (CSV)</span>
         </button>
@@ -641,14 +641,14 @@
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               <span>Upload Data</span>
             </button>
-            <button class="btn-hdr-action btn-hdr-export" onclick="exportCertifiedAuditCsv()">
+            <button class="btn-hdr-action btn-hdr-export" onclick="exportCertifiedAuditCsv(event)" title="Export Certified Qualification Audit Records (CSV)">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               <span>Audit Export</span>
             </button>
-            <a href="/dashboard/docs/SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf" target="_blank" class="btn-hdr-action btn-hdr-pdf">
+            <button class="btn-hdr-action btn-hdr-pdf" onclick="exportPdfReport(event)" title="Export Certified Aerospace Evaluation PDF Report">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
               <span>PDF Report</span>
-            </a>
+            </button>
           </div>
         </div>
 

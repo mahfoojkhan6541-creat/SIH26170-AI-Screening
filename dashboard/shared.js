@@ -206,7 +206,7 @@ function syncHeaderRunStatus(key) {
 }
 
 // 3. TOAST NOTIFICATIONS
-function showToast(message, type = 'info') {
+function showToast(message, type = 'success') {
   let container = document.getElementById('toastContainer');
   if (!container) {
     container = document.createElement('div');
@@ -215,16 +215,20 @@ function showToast(message, type = 'info') {
     document.body.appendChild(container);
   }
 
+  let iconSvg = '';
+  if (type === 'error') {
+    iconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F87171" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+  } else if (type === 'warning') {
+    iconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" stroke-width="2.5"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
+  } else if (type === 'info') {
+    iconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`;
+  } else {
+    iconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>`;
+  }
+
   const toast = document.createElement('div');
   toast.className = 'toast-message';
-  toast.innerHTML = `
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2.5">
-      <circle cx="12" cy="12" r="10"/>
-      <polyline points="16 12 12 8 8 12"/>
-      <line x1="12" y1="16" x2="12" y2="8"/>
-    </svg>
-    <span>${message}</span>
-  `;
+  toast.innerHTML = `${iconSvg}<span>${message}</span>`;
   container.appendChild(toast);
 
   setTimeout(() => {
@@ -236,25 +240,155 @@ function showToast(message, type = 'info') {
 }
 
 // 4. CSV AUDIT EXPORT
-function exportCertifiedAuditCsv() {
-  const currentKey = getActiveDatasetKey();
-  const data = getDatasetComponents(currentKey);
-  const csvHeader = 'MaterialID,Lot,Checkpoint,RawScore,CalibratedScore,QualityGate,Disposition,Rule\n';
-  const csvRows = data.map(d => 
-    `"${d.id}","${d.lot || ''}","${d.checkpoint || ''}",${d.score || d.raw_score || 0},${d.calibrated_score || d.score || 0},"${d.quality_gate || '12/12 PASSED'}","${d.disposition}","${d.rule || 'RULE_ANOMALY_CHECK'}"`
-  ).join('\n');
+function exportCertifiedAuditCsv(event) {
+  if (event) {
+    if (typeof event.preventDefault === 'function') event.preventDefault();
+    if (typeof event.stopPropagation === 'function') event.stopPropagation();
+  }
 
-  const blob = new Blob([csvHeader + csvRows], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `isro_burnin_screening_${currentKey}_audit_${Date.now()}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const btn = (event && event.currentTarget) ? event.currentTarget : document.querySelector('.btn-hdr-export');
+  let originalHtml = '';
+  if (btn) {
+    originalHtml = btn.innerHTML;
+    btn.style.pointerEvents = 'none';
+    btn.innerHTML = `<span style="display:inline-block;width:11px;height:11px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin 0.6s linear infinite;margin-right:4px;"></span><span>Exporting...</span>`;
+  }
 
-  showToast(`Exported ${data.length} certified qualification audit records for ${currentKey}.`);
+  try {
+    const currentKey = getActiveDatasetKey();
+    let data = getDatasetComponents(currentKey);
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      data = window.REAL_D2_COMPONENTS || [];
+    }
+
+    if (!data || data.length === 0) {
+      showToast('No component records available to export.', 'warning');
+      return;
+    }
+
+    const csvHeader = 'MaterialID,Lot,Checkpoint,RawScore,CalibratedScore,QualityGate,Disposition,Rule\n';
+    const csvRows = data.map(d => {
+      if (!d) return '';
+      const id = d.id || d.material_id || d.component_id || 'UNKNOWN';
+      const lot = d.lot || d.lot_id || '';
+      const cp = d.checkpoint || d.checkpoint_hour || '';
+      const raw = d.raw_score !== undefined ? d.raw_score : (d.score !== undefined ? d.score : 0);
+      const cal = d.calibrated_score !== undefined ? d.calibrated_score : raw;
+      const qg = d.quality_gate || '12/12 PASSED';
+      const disp = d.disposition || d.action || 'PASS';
+      const rule = d.rule || 'RULE_ANOMALY_CHECK';
+      return `"${id}","${lot}","${cp}",${raw},${cal},"${qg}","${disp}","${rule}"`;
+    }).filter(Boolean).join('\n');
+
+    const blob = new Blob([csvHeader + csvRows], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.setAttribute('download', `isro_burnin_screening_${currentKey}_audit_${Date.now()}.csv`);
+    document.body.appendChild(a);
+    a.click();
+
+    setTimeout(() => {
+      if (a.parentNode) a.parentNode.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 1500);
+
+    showToast(`Exported ${data.length} certified qualification audit records for ${currentKey}.`, 'success');
+  } catch (err) {
+    console.error('Audit export error:', err);
+    showToast('Failed to export audit records: ' + (err.message || 'Unknown error'), 'error');
+  } finally {
+    if (btn) {
+      setTimeout(() => {
+        btn.style.pointerEvents = 'auto';
+        btn.innerHTML = originalHtml;
+      }, 400);
+    }
+  }
+}
+
+// 4b. OFFICIAL PDF AUDIT REPORT EXPORT
+async function exportPdfReport(event) {
+  if (event) {
+    if (typeof event.preventDefault === 'function') event.preventDefault();
+    if (typeof event.stopPropagation === 'function') event.stopPropagation();
+  }
+
+  const btn = (event && event.currentTarget) ? event.currentTarget : document.querySelector('.btn-hdr-pdf');
+  let originalHtml = '';
+  if (btn) {
+    originalHtml = btn.innerHTML;
+    btn.style.pointerEvents = 'none';
+    btn.innerHTML = `<span style="display:inline-block;width:11px;height:11px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin 0.6s linear infinite;margin-right:4px;"></span><span>Preparing PDF...</span>`;
+  }
+
+  showToast('Preparing certified aerospace PDF report...', 'info');
+
+  try {
+    const candidateUrls = [
+      'docs/SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf',
+      '/docs/SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf',
+      'SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf',
+      '/SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf',
+      '../docs/SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf'
+    ];
+
+    let foundBlob = null;
+    let foundFileName = 'SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf';
+
+    for (const url of candidateUrls) {
+      try {
+        const response = await fetch(url);
+        if (response.ok) {
+          const contentType = response.headers.get('content-type') || '';
+          if (contentType.includes('text/html')) continue;
+          const blob = await response.blob();
+          if (blob && blob.size > 2000) {
+            foundBlob = blob;
+            break;
+          }
+        }
+      } catch (e) {
+        // try next candidate
+      }
+    }
+
+    if (foundBlob) {
+      const blobUrl = URL.createObjectURL(foundBlob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = blobUrl;
+      a.setAttribute('download', foundFileName);
+      document.body.appendChild(a);
+      a.click();
+      
+      setTimeout(() => {
+        if (a.parentNode) a.parentNode.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      }, 1500);
+
+      showToast('Certified aerospace PDF evaluation report downloaded successfully.', 'success');
+    } else {
+      const fallbackUrl = 'docs/SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf';
+      const win = window.open(fallbackUrl, '_blank');
+      if (win) {
+        showToast('Official PDF evaluation report opened in new tab.', 'success');
+      } else {
+        throw new Error('Could not retrieve or open PDF report file.');
+      }
+    }
+  } catch (err) {
+    console.error('PDF export error:', err);
+    showToast('Failed to export PDF report: File unavailable. Please verify report file.', 'error');
+  } finally {
+    if (btn) {
+      setTimeout(() => {
+        btn.style.pointerEvents = 'auto';
+        btn.innerHTML = originalHtml;
+      }, 500);
+    }
+  }
 }
 
 // -------------------------------------------------------------

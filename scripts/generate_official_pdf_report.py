@@ -504,11 +504,19 @@ def build_pdf(filename="docs/SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf"):
     doc.build(story, canvasmaker=NumberedCanvas)
     print(f"Successfully generated PDF: {filename} ({os.path.getsize(filename)/1024:.1f} KB)")
     
-    root_copy = "SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf"
-    if os.path.abspath(filename) != os.path.abspath(root_copy):
-        import shutil
-        shutil.copyfile(filename, root_copy)
-        print(f"Synchronized root copy: {root_copy} ({os.path.getsize(root_copy)/1024:.1f} KB)")
+    import shutil
+    sync_targets = [
+        "SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf",
+        "dashboard/SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf",
+        "dashboard/docs/SIH26170_FINAL_MODEL_EVALUATION_REPORT.pdf"
+    ]
+    for target in sync_targets:
+        target_path = os.path.abspath(target)
+        if os.path.abspath(filename) != target_path:
+            os.makedirs(os.path.dirname(target_path), exist_ok=True)
+            shutil.copyfile(filename, target_path)
+            print(f"Synchronized copy: {target} ({os.path.getsize(target_path)/1024:.1f} KB)")
 
 if __name__ == '__main__':
     build_pdf()
+
