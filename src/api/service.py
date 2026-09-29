@@ -3,7 +3,7 @@ import json
 import uuid
 import datetime
 from typing import Dict, Any, List, Optional
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -56,11 +56,18 @@ ENCODERS_BY_TYPE[np.ndarray] = lambda arr: arr.tolist()
 import math
 
 def sanitize_for_json(obj):
-    """Recursively replaces NaN, Inf, and non-JSON-compliant float values with None."""
-    if isinstance(obj, float):
-        if math.isnan(obj) or math.isinf(obj):
+    """Recursively replaces NaN, Inf, and non-JSON-compliant float values with None, and converts NumPy types to native Python types."""
+    if isinstance(obj, (np.bool_, bool)):
+        return bool(obj)
+    elif isinstance(obj, (np.floating, float)):
+        val = float(obj)
+        if math.isnan(val) or math.isinf(val):
             return None
-        return obj
+        return val
+    elif isinstance(obj, (np.integer, int)):
+        return int(obj)
+    elif isinstance(obj, np.ndarray):
+        return [sanitize_for_json(v) for v in obj.tolist()]
     elif isinstance(obj, dict):
         return {k: sanitize_for_json(v) for k, v in obj.items()}
     elif isinstance(obj, (list, tuple)):
@@ -68,7 +75,7 @@ def sanitize_for_json(obj):
     return obj
 
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse, FileResponse
+from fastapi.responses import RedirectResponse, FileResponse, JSONResponse
 
 # Enable CORS for dashboard access
 app.add_middleware(
@@ -78,6 +85,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"status": "error", "detail": exc.detail, "error": str(exc.detail)},
+        headers=exc.headers
+    )
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={"status": "error", "detail": f"Internal server error: {str(exc)}", "error": str(exc)}
+    )
 
 # Clean URL Route Endpoints for Dedicated Dashboard Pages
 @app.get("/overview", include_in_schema=False)
@@ -200,11 +222,11 @@ async def upload_preview_endpoint(file: UploadFile = File(...)):
     try:
         content = await file.read()
         res = save_and_inspect_file(file.filename, content)
-        return res
+        return JSONResponse(content=sanitize_for_json(res))
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return JSONResponse(status_code=400, content={"detail": str(e), "error": str(e)})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to parse uploaded file: {str(e)}")
+        return JSONResponse(status_code=500, content={"detail": f"Failed to parse uploaded file: {str(e)}", "error": str(e)})
 
 
 @app.post("/api/upload/validate")
@@ -212,11 +234,13 @@ def upload_validate_endpoint(req: UploadValidateRequest):
     """Executes pre-screening validation and 12-check quality gate on mapped upload."""
     try:
         res = validate_mapped_upload(req.saved_path, req.mapping)
-        return res
+        return JSONResponse(content=sanitize_for_json(res))
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return JSONResponse(status_code=400, content={"detail": str(e), "error": str(e)})
+    except FileNotFoundError as e:
+        return JSONResponse(status_code=404, content={"detail": str(e), "error": str(e)})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
+        return JSONResponse(status_code=500, content={"detail": f"Validation failed: {str(e)}", "error": str(e)})
 
 
 @app.post("/api/upload/process")
@@ -224,11 +248,13 @@ def upload_process_endpoint(req: UploadProcessRequest):
     """Executes full screening pipeline and anomaly intelligence on uploaded dataset."""
     try:
         res = execute_upload_pipeline(req.saved_path, req.dataset_name or "Custom Dataset", req.mapping)
-        return res
+        return JSONResponse(content=sanitize_for_json(res))
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        return JSONResponse(status_code=400, content={"detail": str(e), "error": str(e)})
+    except FileNotFoundError as e:
+        return JSONResponse(status_code=404, content={"detail": str(e), "error": str(e)})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Pipeline processing failed: {str(e)}")
+        return JSONResponse(status_code=500, content={"detail": f"Pipeline processing failed: {str(e)}", "error": str(e)})
 
 
 @app.post("/datasets/register")

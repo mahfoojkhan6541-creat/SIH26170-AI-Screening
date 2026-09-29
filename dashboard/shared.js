@@ -749,6 +749,44 @@ function createUploadModalDom() {
   }
 }
 
+// Safe Response Parser for Upload Endpoints (prevents JSON SyntaxError on non-JSON/error responses)
+async function parseServerResponse(res, defaultErrMsg) {
+  let text = '';
+  try {
+    text = await res.text();
+  } catch (e) {
+    text = '';
+  }
+
+  let data = null;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      data = null;
+    }
+  }
+
+  if (!res.ok) {
+    let errMsg = '';
+    if (data && (data.detail || data.error || data.message)) {
+      errMsg = data.detail || data.error || data.message;
+      if (typeof errMsg === 'object') errMsg = JSON.stringify(errMsg);
+    } else if (text) {
+      // Strip HTML tags if proxy or server returned HTML
+      const cleanText = text.replace(/<[^>]*>?/gm, ' ').replace(/\s+/g, ' ').trim();
+      errMsg = cleanText.length > 200 ? cleanText.substring(0, 200) + '...' : cleanText;
+    }
+    throw new Error(errMsg || `${defaultErrMsg} (HTTP ${res.status})`);
+  }
+
+  if (!data) {
+    throw new Error(`${defaultErrMsg}: Server returned empty or non-JSON response.`);
+  }
+
+  return data;
+}
+
 // Upload Step 1 -> Server Preview
 function handleFileSelect(file) {
   if (!file) return;
@@ -775,10 +813,7 @@ function handleFileSelect(file) {
     method: 'POST',
     body: formData
   })
-  .then(res => {
-    if (!res.ok) return res.json().then(err => { throw new Error(err.detail || 'Failed to inspect file'); });
-    return res.json();
-  })
+  .then(res => parseServerResponse(res, 'Failed to inspect file'))
   .then(data => {
     uploadState.previewData = data;
     document.getElementById('uploadLoadingSpinner').style.display = 'none';
@@ -886,10 +921,7 @@ function handleUploadNext() {
         mapping: mapping
       })
     })
-    .then(res => {
-      if (!res.ok) return res.json().then(err => { throw new Error(err.detail || 'Validation failed'); });
-      return res.json();
-    })
+    .then(res => parseServerResponse(res, 'Validation failed'))
     .then(data => {
       uploadState.validationData = data;
       renderStep3Validation(data);
@@ -979,10 +1011,7 @@ function executeUploadPipelineProcess() {
       mapping: mapping
     })
   })
-  .then(res => {
-    if (!res.ok) return res.json().then(err => { throw new Error(err.detail || 'Processing failed'); });
-    return res.json();
-  })
+  .then(res => parseServerResponse(res, 'AI Inference processing failed'))
   .then(data => {
     bar.style.width = '100%';
     stage.innerText = 'Screening Complete! Writing SQLite Audit Trail...';
@@ -1015,9 +1044,20 @@ function executeUploadPipelineProcess() {
     }, 600);
   })
   .catch(err => {
+    bar.style.background = '#DC2626';
+    bar.style.width = '100%';
     stage.innerText = `Error: ${err.message}`;
     stage.style.color = '#DC2626';
     showToast(err.message, 'error');
+    const backBtn = document.getElementById('btnUploadBack');
+    if (backBtn) {
+      backBtn.style.display = 'inline-flex';
+      backBtn.onclick = () => {
+        bar.style.background = '';
+        stage.style.color = '';
+        setUploadWizardStep(2);
+      };
+    }
   });
 }
 

@@ -179,7 +179,11 @@ def detect_smart_column_mapping(columns: List[str], df: pd.DataFrame) -> Dict[st
 def validate_mapped_upload(saved_path: str, mapping: Dict[str, Any]) -> Dict[str, Any]:
     """Validates the uploaded data against the confirmed column mappings and 12-check quality gate."""
     if not os.path.exists(saved_path):
-        raise FileNotFoundError(f"Uploaded file cache not found: {saved_path}")
+        cand = os.path.join(UPLOAD_DIR, os.path.basename(saved_path))
+        if os.path.exists(cand):
+            saved_path = cand
+        else:
+            raise FileNotFoundError(f"Uploaded file cache not found: {saved_path}")
 
     adapter = IntakeAdapterFactory.get_adapter(saved_path)
     df = adapter.load(saved_path)
@@ -283,7 +287,11 @@ def execute_upload_pipeline(
     7. Full audit record creation in SQLite
     """
     if not os.path.exists(saved_path):
-        raise FileNotFoundError(f"File not found: {saved_path}")
+        cand = os.path.join(UPLOAD_DIR, os.path.basename(saved_path))
+        if os.path.exists(cand):
+            saved_path = cand
+        else:
+            raise FileNotFoundError(f"Uploaded file cache not found: {saved_path}")
 
     adapter = IntakeAdapterFactory.get_adapter(saved_path)
     raw_df = adapter.load(saved_path)
