@@ -1,0 +1,52 @@
+population_policy_version: "pop_v2"
+description: "Context-aware reference population selection and validation policy adhering to Section 19."
+
+hierarchical_levels:
+  level_1:
+    name: "same_part_same_lot_same_conditions"
+    description: "Exact match on part type, part number, lot/batch, test conditions, and checkpoint"
+    keys:
+      - "part_type"
+      - "part_number"
+      - "lot_id"
+      - "test_condition"
+      - "checkpoint"
+    min_population_size: 8
+    target_exclusion: true
+    fallback_level: "level_2"
+
+  level_2:
+    name: "same_part_cross_lot_same_checkpoint"
+    description: "Relaxed cross-lot comparison preserving part type, part number, and checkpoint"
+    keys:
+      - "part_type"
+      - "part_number"
+      - "checkpoint"
+    min_population_size: 5
+    target_exclusion: true
+    fallback_level: "level_3"
+
+  level_3:
+    name: "same_part_family_same_checkpoint"
+    description: "Part family comparison when part number population is small"
+    keys:
+      - "part_type"
+      - "checkpoint"
+    min_population_size: 5
+    target_exclusion: true
+    fallback_level: "level_4"
+
+  level_4:
+    name: "cross_part_same_checkpoint_screening_cohort"
+    description: "Global screening run baseline at same temporal checkpoint"
+    keys:
+      - "checkpoint"
+    min_population_size: 5
+    target_exclusion: true
+    fallback_level: "no_reference"
+
+validation:
+  min_comparable_components: 5
+  require_valid_quality_peers: true
+  exclude_target_from_reference: true
+  prevent_future_leakage: true

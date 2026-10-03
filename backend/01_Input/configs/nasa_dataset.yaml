@@ -1,0 +1,11 @@
+dataset_id: NASA
+intended_tasks:
+- anomaly
+notes: ''
+received_at: '2026-09-23T14:04:00.377948+00:00'
+sha256: 0f50fbfc651c41bd6a14203722f224a0eb45fe7b30646dd768512a6e65438c39
+source_name: NASA
+source_path: data/canonical/NASA_degradation_canonical.csv
+source_type: csv
+source_version: sha256:0f50fbfc651c
+status: registered
